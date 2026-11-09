@@ -82,5 +82,24 @@ void main() {
       await client.clearProviderKey(ref: ref);
       expect((await client.describeCredentials([ref]))[ref]?.configured, isFalse);
     });
+
+    test('workspace baseline and archive updates', () async {
+      final sessionId = (await client.createSession(cwd: '/tmp/archive-workspace')).sessionId;
+      final baseline = Completer<WorkspaceBaseline>();
+      final archived = Completer<WorkspaceArchivedUpdate>();
+      final subscription = client.watchWorkspaces().listen((update) {
+        if (update is WorkspaceBaseline && !baseline.isCompleted) baseline.complete(update);
+        if (update is WorkspaceArchivedUpdate && !archived.isCompleted) archived.complete(update);
+      });
+      addTearDown(subscription.cancel);
+
+      expect((await baseline.future.timeout(const Duration(seconds: 10))).archivedSessionIds, isEmpty);
+      expect(await client.archiveSession(sessionId), contains(sessionId));
+      expect(
+        (await archived.future.timeout(const Duration(seconds: 10))).archivedSessionIds,
+        contains(sessionId),
+      );
+      expect(await client.unarchiveSession(sessionId), isNot(contains(sessionId)));
+    });
   });
 }
