@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Documentation & README
+    url: https://github.com/patelakash007/DSH-app#readme
+    about: Installation, on-device engine, phone automation, and remote host guides are in README and docs/architecture.md

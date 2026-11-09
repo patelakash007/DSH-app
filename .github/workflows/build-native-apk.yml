@@ -1,0 +1,50 @@
+name: Build Native DSH APK
+on: [workflow_dispatch, push]
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout DSH-app
+        uses: actions/checkout@v4
+        with:
+          path: 'dsh-app'
+
+      - name: Checkout DSH-go-rewrite
+        uses: actions/checkout@v4
+        with:
+          repository: 'patelakash007/DSH-go-rewrite'
+          path: 'dsh-go-rewrite'
+
+      - name: Setup Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.24.x'
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.47.7'
+
+      - name: Compile Native Go Engine for Android ARM64
+        run: |
+          mkdir -p dsh-app/app/android/app/src/main/jniLibs/arm64-v8a
+          cd dsh-go-rewrite
+          CGO_ENABLED=0 GOOS=android GOARCH=arm64 go build -ldflags="-s -w" -o ../dsh-app/app/android/app/src/main/jniLibs/arm64-v8a/libdsh.so ./cmd/dsh-server
+
+      - name: Build Flutter Release APK
+        run: |
+          cd dsh-app/app
+          flutter pub get
+          flutter build apk --release --flavor arm64
+
+      - name: Upload APK to Artifacts / Releases
+        uses: actions/upload-artifact@v4
+        with:
+          name: dsh-native-release.apk
+          path: dsh-app/app/build/app/outputs/flutter-apk/*.apk

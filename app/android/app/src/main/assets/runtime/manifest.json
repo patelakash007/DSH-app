@@ -1,0 +1,14 @@
+{
+  "runtimeVersion": "native-1.0.0",
+  "abi": "arm64-v8a",
+  "rootfs": "",
+  "rootfsBytes": 0,
+  "rootfsSha256": "",
+  "uncompressedBytes": 0,
+  "dshVersion": "1.0.0-native",
+  "nodeVersion": "go-native",
+  "launch": {
+    "argv": [],
+    "env": {}
+  }
+}

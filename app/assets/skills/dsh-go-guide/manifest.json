@@ -1,0 +1,19 @@
+{
+  "name": "dsh-go-guide",
+  "files": {
+    "SKILL.md": "SKILL.md",
+    "README.md": "README.md",
+    "en-01-chat.md": "en/01-chat.md",
+    "en-02-models.md": "en/02-models.md",
+    "en-03-engine-hosts.md": "en/03-engine-hosts.md",
+    "en-04-phone-control.md": "en/04-phone-control.md",
+    "en-05-web.md": "en/05-web.md",
+    "en-06-pets.md": "en/06-pets.md",
+    "en-07-sharing.md": "en/07-sharing.md",
+    "en-08-plugins.md": "en/08-plugins.md",
+    "en-09-appearance.md": "en/09-appearance.md",
+    "en-10-settings.md": "en/10-settings.md",
+    "en-11-faq.md": "en/11-faq.md",
+    "en-12-bots.md": "en/12-bots.md"
+  }
+}

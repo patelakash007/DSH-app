@@ -1,0 +1,41 @@
+// The quiet filter capsule used where a filter has too
+// many options for a SegmentedPill (plugin categories, phone brands).
+
+import 'package:flutter/material.dart';
+
+class CapsuleChoiceChip extends StatelessWidget {
+  const CapsuleChoiceChip({super.key, required this.label, required this.selected, required this.onSelected});
+
+  final String label;
+  final bool selected;
+  final VoidCallback onSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final dark = theme.brightness == Brightness.dark;
+    return Theme(
+      // The chip's Material paints canvasColor under the fill; in dark mode
+      // that opaque canvas hides the card the 7% white should sit on.
+      data: dark ? theme.copyWith(canvasColor: Colors.transparent) : theme,
+      child: ChoiceChip(
+        label: Text(label),
+        selected: selected,
+        showCheckmark: false,
+        onSelected: (_) => onSelected(),
+        shape: const StadiumBorder(),
+        side: BorderSide.none,
+        visualDensity: VisualDensity.compact,
+        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+        padding: const EdgeInsets.symmetric(horizontal: 6),
+        backgroundColor: dark ? Colors.white.withValues(alpha: 0.07) : scheme.onSurface.withValues(alpha: 0.05),
+        selectedColor: scheme.onSurface,
+        labelStyle: theme.textTheme.labelLarge?.copyWith(
+          fontSize: 13,
+          color: selected ? scheme.surface : scheme.onSurfaceVariant,
+        ),
+      ),
+    );
+  }
+}

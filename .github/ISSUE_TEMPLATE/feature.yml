@@ -1,0 +1,33 @@
+name: Feature Request
+description: Propose a new capability or UI improvement
+title: "[Feature] "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Please explain the problem you are trying to solve before proposing a specific implementation.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem Statement
+      description: What are you trying to do, and what is currently blocking or inconvenient?
+      placeholder: I want to ..., but currently I have to ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: idea
+    attributes:
+      label: Proposed Solution (optional)
+      description: Describe ideas or approaches you have considered
+    validations:
+      required: false
+
+  - type: input
+    id: device
+    attributes:
+      label: Device / Version (optional)
+      placeholder: Pixel 8 / Android 15 / 1.0.0
+    validations:
+      required: false

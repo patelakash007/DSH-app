@@ -1,0 +1,62 @@
+name: Bug Report
+description: Something is broken, throwing errors, or hanging
+title: "[Bug] "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Please search existing issues before filing a duplicate.
+        If reproducible, provide clear steps to reproduce.
+
+  - type: input
+    id: version
+    attributes:
+      label: App Version
+      description: Found in Settings › About
+      placeholder: 1.0.0
+    validations:
+      required: true
+
+  - type: input
+    id: device
+    attributes:
+      label: Device / OS / Engine Version
+      description: Engine version can be seen in Settings › On-Device Engine
+      placeholder: Pixel 8 / Android 15 / DSH 1.0.0
+    validations:
+      required: true
+
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: A concise description of the issue
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to Reproduce
+      placeholder: |
+        1. Open ...
+        2. Tap ...
+        3. See error ...
+    validations:
+      required: false
+
+  - type: textarea
+    id: expect
+    attributes:
+      label: Expected vs Actual Behavior
+    validations:
+      required: false
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs (optional)
+      description: Settings › On-Device Engine › Logs, or stack trace on crash
+      render: shell
+    validations:
+      required: false

@@ -1,0 +1,43 @@
+# PR gate - enforces CONTRIBUTING.md external PR policy.
+# Logic lives in .github/scripts/pr-intake/; this workflow only orchestrates.
+#
+# Uses pull_request_target to manage incoming PRs from forks. Check out default
+# branch only; never checkout untrusted fork code in privileged CI context.
+#
+# Only triggers on opened / reopened.
+name: PR Gate
+
+on:
+  pull_request_target:
+    types: [opened, reopened]
+
+concurrency:
+  group: pr-gate-${{ github.event.pull_request.number }}
+  cancel-in-progress: false
+
+jobs:
+  check-contributor:
+    if: github.repository == 'patelakash007/DSH-app'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+      pull-requests: write
+    steps:
+      - name: Checkout default branch only
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+          persist-credentials: false
+
+      - name: Check pull request intake policy
+        uses: actions/github-script@v9
+        with:
+          script: |
+            const { pathToFileURL } = await import('node:url')
+            const { join } = await import('node:path')
+            const { runPrGate } = await import(pathToFileURL(join(
+              process.env.GITHUB_WORKSPACE,
+              '.github/scripts/pr-intake/gate.mjs',
+            )).href)
+            await runPrGate({ github, context, core })
