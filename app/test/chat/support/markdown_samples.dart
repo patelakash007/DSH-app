@@ -79,7 +79,7 @@ const quotesReply = '''
 
 /// A table with alignment and inline Markdown in cells.
 const tableReply = '''
-| Model | Context | Price ($ / 1M tokens) | Description |
+| Model | Context | Price (\$ / 1M tokens) | Description |
 |:---|:---:|---:|---|
 | DeepSeek-V4-Pro | 128K | 4.00 | **Default**, stronger reasoning |
 | DeepSeek-V41-Flash | 64K | 1.00 | Faster and `cheaper` |
