@@ -15,8 +15,30 @@ jobs:
           repository: 'patelakash007/DSH-go-rewrite'
           path: 'dsh-go-rewrite'
 
+      - name: Configure Stable Release Signing
+        env:
+          KEYSTORE_B64: ${{ secrets.DSH_ANDROID_KEYSTORE_B64 }}
+          STORE_PASSWORD: ${{ secrets.DSH_ANDROID_STORE_PASSWORD }}
+          KEY_PASSWORD: ${{ secrets.DSH_ANDROID_KEY_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.DSH_ANDROID_KEY_ALIAS }}
+        run: |
+          set -euo pipefail
+          test -n "$KEYSTORE_B64"
+          test -n "$STORE_PASSWORD"
+          test -n "$KEY_PASSWORD"
+          test -n "$KEY_ALIAS"
+          keystore="$GITHUB_WORKSPACE/dsh-app/app/android/dsh-release.p12"
+          printf '%s' "$KEYSTORE_B64" | base64 --decode > "$keystore"
+          chmod 600 "$keystore"
+          cat > dsh-app/app/android/key.properties <<EOF
+          storeFile=$keystore
+          storePassword=$STORE_PASSWORD
+          keyAlias=$KEY_ALIAS
+          keyPassword=$KEY_PASSWORD
+          EOF
+
       - name: Setup Java 17
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: 'temurin'
           java-version: '17'
@@ -25,6 +47,7 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version: '1.25.x'
+          cache-dependency-path: dsh-go-rewrite/go.sum
 
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
