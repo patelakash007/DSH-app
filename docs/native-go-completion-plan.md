@@ -4,6 +4,50 @@
 > Scope: finish the native Go engine, preserve the tested Flutter UI, port every required local capability, migrate user data, and remove the Node/PRoot/Ubuntu fallback from every build path.
 > Repositories: [patelakash007/DSH-app](https://github.com/patelakash007/DSH-app) and [patelakash007/DSH-go-rewrite](https://github.com/patelakash007/DSH-go-rewrite).
 
+## 0. Current implementation status (2026-11-10)
+
+The native engine is no longer a chat-only compatibility shim. The machine-readable ledger in [`native-contract.json`](native-contract.json) is generated from the preserved Dart client and the pinned Go server:
+
+| Surface | Implemented | In progress | Blocked | Total |
+|---|---:|---:|---:|---:|
+| RPC methods | 95 | 15 | 1 | 111 |
+| Mux streams | 12 | 0 | 0 | 12 |
+| HTTP routes | 4 | 0 | 2 | 6 |
+
+Working end to end in the native server:
+
+- Real Go agent loop with tool schemas, tool execution, interactive approvals, streaming text/reasoning, cancellation, prompt queue/steer, and durable history.
+- Native workspace tools: read, list, write, edit, literal search, foreground shell, background shell jobs.
+- Workspace files API, workspace watch, streamed and inline uploads, durable attachment metadata, `@` file/session references with one-turn conversation snapshots.
+- Session lifecycle: create, list, projections, rename, fork, pagination, archive/pin, `session/control`, goals, todos, message feedback, session ZIP export.
+- Native terminal with real PTY allocation, kernel window-size changes, duplex attach/write/output/ack/resize/retain/close.
+- Skills discovery/loading, native agent preset, durable settings with revisions, command catalogue.
+- Durable schedules (at/every/daily/weekly/cron) with history and a `schedule_create` model tool.
+- Configurable OpenAI-compatible providers, model discovery, provider-aware routing, and provider settings.
+- Subagent sessions with catalog/identity/timing projections, `spawn_subagent`, `subagents/prompt`, and `subagents/interruptByParent`.
+- Structured user questions (`ask_user_question`, `userQuestions/answer`, `userQuestions/attachWait`) and continued-question steering.
+- DeepSeek account PKCE sign-in through the Host-owned `/oauth/callback`, profile and wallet queries, and sign-out.
+- Model-backed reasoning translation (`cotTranslation/*`) through the configured DeepSeek route.
+- Truthful signed-out account state, subscription-auth capability states, and explicit native plugin capability responses.
+- Hardened release pipeline: pinned engine revision, pinned action SHAs, unsigned build/sign split, dual ARM64/x86_64 builds, 64 KiB ELF checks, provenance manifest, in-APK engine hash verification, signer fingerprint verification, and native-only APK audit.
+
+Still in progress or blocked:
+
+- Subscription (`appAuth`) sign-in for ChatGPT/Claude; the native engine reports it as unavailable instead of pretending to start.
+- Speech recognition bridge from the Go engine to the Android voice plugin (the optional SenseVoice bundle is not bundled).
+- Native plugin ABI and plugin migration (arbitrary Node/Cordis packages cannot run without Node; the plugin manager reports explicit unsupported responses).
+- DS Bot HTTP routes (`/api/bot`, `/api/bot/feed`) remain blocked because DS Bot is a Node plugin; the app shows its install card.
+- Office-to-PDF conversion (requires LibreOffice; explicitly blocked).
+- Embedded DSH Web assets.
+- Legacy runtime deletion and crash-safe user-data migration.
+
+Release evidence from the verified native pipeline:
+
+- Native APK workflow: run `42750338533` (success), later parity runs are tracked in GitHub Actions.
+- ARM64 APK SHA-256: `9386f0ba0c558feab6a852a20529b34e3fc7fd96e3c19d6c3568fb229bde42ff` (v1.1.0 parity build; later builds change with the pinned engine).
+- Signer certificate SHA-256: `21f9053812645ea244277eafc236f37fc19f1b6ae07b70fee28aaf07de9bc058`.
+- The APK contains no rootfs, Node, npm, pnpm, Ubuntu, PRoot, talloc, or Android-shmem payloads.
+
 ## 1. Project ambition
 
 The product goal is not merely to produce an APK containing a Go binary. It is to keep the existing DSH-app experience while replacing the simulated Linux computer underneath it with a complete Android-native engine:
