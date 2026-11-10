@@ -1,6 +1,5 @@
 {
   "rpc": {
-    "account/startSignIn": "in-progress",
     "appAuth/begin": "in-progress",
     "pluginManager/installBundle": "in-progress",
     "pluginManager/cancelInstall": "in-progress",
@@ -20,7 +19,6 @@
   },
   "mux": {},
   "notes": {
-    "account/startSignIn": "The native engine reports a truthful signed-out state; DeepSeek PKCE sign-in is not wired yet.",
     "appAuth/begin": "Subscription sign-in is reported as unavailable instead of pretending to start.",
     "pluginManager/installBundle": "The standalone engine does not run Node plugin packages; installation is explicitly unsupported.",
     "pluginManager/cancelInstall": "Native plugin installation is not available yet.",

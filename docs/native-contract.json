@@ -4,8 +4,8 @@
   "counts": {
     "rpc": {
       "total": 111,
-      "implemented": 94,
-      "in-progress": 16,
+      "implemented": 95,
+      "in-progress": 15,
       "blocked": 1
     },
     "mux": {
@@ -92,13 +92,13 @@
     },
     {
       "endpoint": "account/startSignIn",
-      "status": "in-progress",
+      "status": "implemented",
       "owner": "native-engine",
-      "test": null,
+      "test": "packages/dsh_client/test/native_go_contract_test.dart",
       "clientReferences": [
         "app/lib/state/account_api.dart"
       ],
-      "note": "The native engine reports a truthful signed-out state; DeepSeek PKCE sign-in is not wired yet."
+      "note": null
     },
     {
       "endpoint": "agentPresets/list",
@@ -1329,7 +1329,8 @@
       "/",
       "/dsh-go/v1/info",
       "/dsh-go/v1/sessions/delete",
-      "/dsh-go/v1/sessions/deletion"
+      "/dsh-go/v1/sessions/deletion",
+      "/oauth/callback"
     ]
   }
 }

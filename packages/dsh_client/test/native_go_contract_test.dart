@@ -291,6 +291,16 @@ void main() {
       expect((commands! as List).whereType<Map>().map((command) => command['name']), contains('permission'));
     });
 
+    test('native account sign-in validates its callback origin', () async {
+      await expectLater(
+        client.rpc.call('account/startSignIn', {
+          'callbackOrigin': 'https://example.com',
+          'loginSource': 'web',
+        }),
+        throwsA(isA<DshRemoteException>().having((e) => e.code, 'code', 'gateway/arguments-invalid')),
+      );
+    });
+
     test('native terminal PTY lifecycle', () async {
       final sessionId = (await client.createSession()).sessionId;
       final environment = await client.terminalEnvironment(sessionId);

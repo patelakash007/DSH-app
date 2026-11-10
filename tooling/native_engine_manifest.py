@@ -55,6 +55,7 @@ def main() -> None:
                 "message-feedback-v1",
                 "reference-discovery-v1",
                 "reference-snapshots-v1",
+                "account-signin-v1",
                 "account-state-v1",
                 "cot-translation-v1",
                 "custom-providers-v1",
