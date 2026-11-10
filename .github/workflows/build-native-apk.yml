@@ -272,6 +272,33 @@ jobs:
             printf '%s\n' "$listing" | grep -q 'lib/.*/libdsh.so'
             printf '%s\n' "$listing" | grep -q 'assets/flutter_assets/assets/runtime/manifest.json\|assets/runtime/manifest.json'
           done
+          python3 - <<'PY'
+          import hashlib
+          import json
+          import pathlib
+          import re
+          import zipfile
+
+          forbidden = re.compile(r'rootfs-|(^|/)node$|(^|/)npm$|(^|/)pnpm$|ubuntu|libproot|libtalloc|libandroid-shmem', re.I)
+          for apk in sorted(pathlib.Path('build/unsigned').glob('*.apk')):
+              with zipfile.ZipFile(apk) as archive:
+                  names = archive.namelist()
+                  rejected = [name for name in names if forbidden.search(name)]
+                  if rejected:
+                      raise SystemExit(f'{apk}: forbidden runtime entries: {rejected}')
+                  libraries = [name for name in names if name.endswith('/libdsh.so')]
+                  if len(libraries) != 1:
+                      raise SystemExit(f'{apk}: expected one native engine, got {libraries}')
+                  manifest = json.loads(archive.read('assets/runtime/manifest.json'))
+                  binary = archive.read(libraries[0])
+                  actual = hashlib.sha256(binary).hexdigest()
+                  expected = manifest['engine']['sha256']
+                  if actual != expected:
+                      raise SystemExit(f'{apk}: packaged engine hash {actual} != manifest {expected}')
+                  if len(binary) != manifest['engine']['bytes']:
+                      raise SystemExit(f'{apk}: packaged engine size does not match manifest')
+                  print(apk, manifest['abi'], actual, len(binary))
+          PY
           (cd build/native-provenance && sha256sum ./* > SHA256SUMS)
           (cd build/unsigned && sha256sum ./* > SHA256SUMS)
 
@@ -345,6 +372,7 @@ jobs:
             "$zipalign" -f -p 4 "$input" "$aligned"
             "$apksigner" sign --ks "$keystore" --ks-type PKCS12 --ks-key-alias "$KEY_ALIAS" \
               --ks-pass env:STORE_PASSWORD --key-pass env:KEY_PASSWORD \
+              --min-sdk-version 23 \
               --v1-signing-enabled true --v2-signing-enabled true --v3-signing-enabled true \
               --out "$output" "$aligned"
             "$apksigner" verify --verbose --print-certs "$output" | tee "$RUNNER_TEMP/cert.txt"

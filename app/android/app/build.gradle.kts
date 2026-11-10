@@ -85,8 +85,12 @@ android {
         // nativeLibraryDir so they can be executed.
         jniLibs {
             useLegacyPackaging = true
-            // Keep the Termux binaries byte-identical to runtime/out (their hashes are in the manifest).
-            keepDebugSymbols += listOf("**/libproot.so", "**/libproot-loader.so", "**/libtalloc.so", "**/libandroid-shmem.so")
+            // These executable-shaped libraries must remain byte-identical to
+            // the files whose hashes are recorded in their runtime manifests.
+            keepDebugSymbols += listOf(
+                "**/libdsh.so",
+                "**/libproot.so", "**/libproot-loader.so", "**/libtalloc.so", "**/libandroid-shmem.so",
+            )
         }
     }
 
