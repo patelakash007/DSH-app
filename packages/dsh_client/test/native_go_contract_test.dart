@@ -261,6 +261,36 @@ void main() {
       expect(target.sameWorkspace, isTrue);
     });
 
+    test('native settings revisions and command catalogue', () async {
+      final description = await client.describeSettings();
+      expect(description.writable, isTrue);
+      expect(description.namespaces, contains('native-engine'));
+      final before = description.namespaces['native-engine']!;
+      final changed = await client.setSetting(
+        'native-engine',
+        ['defaultPermission'],
+        'read-only',
+        expectedRevision: before.revision,
+      );
+      expect(changed.value['defaultPermission'], 'read-only');
+      await expectLater(
+        client.setSetting('native-engine', ['defaultPermission'], 'auto', expectedRevision: before.revision),
+        throwsA(isA<DshRemoteException>().having((e) => e.code, 'code', 'settings/conflict')),
+      );
+      final restored = await client.setSetting(
+        'native-engine',
+        ['defaultPermission'],
+        'auto',
+        expectedRevision: changed.revision,
+      );
+      expect(restored.value['defaultPermission'], 'auto');
+      await client.setDefaultAgentPreset('native');
+
+      final commands = await client.rpc.call('commands/list', {'agentId': (await client.createSession()).sessionId});
+      expect(commands, isA<List>());
+      expect((commands! as List).whereType<Map>().map((command) => command['name']), contains('permission'));
+    });
+
     test('session fork persists a closed history prefix', () async {
       final sourceId = (await client.createSession()).sessionId;
       final ended = Completer<TurnEndedEvent>();

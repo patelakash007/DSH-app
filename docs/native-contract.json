@@ -4,9 +4,9 @@
   "counts": {
     "rpc": {
       "total": 111,
-      "implemented": 46,
-      "in-progress": 59,
-      "placeholder": 6
+      "implemented": 47,
+      "in-progress": 60,
+      "placeholder": 4
     },
     "mux": {
       "total": 10,
@@ -203,13 +203,13 @@
     },
     {
       "endpoint": "commands/list",
-      "status": "placeholder",
+      "status": "implemented",
       "owner": "native-engine",
-      "test": null,
+      "test": "packages/dsh_client/test/native_go_contract_test.dart",
       "clientReferences": [
         "app/lib/state/commands_state.dart"
       ],
-      "note": "The native command catalogue is not implemented yet."
+      "note": null
     },
     {
       "endpoint": "cotTranslation/limits",
@@ -815,7 +815,7 @@
     },
     {
       "endpoint": "settings/describe",
-      "status": "placeholder",
+      "status": "in-progress",
       "owner": "native-engine",
       "test": null,
       "clientReferences": [
@@ -823,7 +823,7 @@
         "packages/dsh_client/lib/src/engine_settings_api.dart",
         "packages/dsh_client/lib/src/features_api.dart"
       ],
-      "note": "Native schema-driven settings are not implemented."
+      "note": "Native settings are durable and schema-driven for built-in namespaces; plugin/provider namespaces are still pending."
     },
     {
       "endpoint": "settings/mutate",
@@ -834,7 +834,7 @@
         "packages/dsh_client/lib/src/engine_settings_api.dart",
         "packages/dsh_client/lib/src/features_api.dart"
       ],
-      "note": null
+      "note": "Atomic set/unset and revisions work for built-in native namespaces; plugin/provider namespaces are still pending."
     },
     {
       "endpoint": "settings/update",
@@ -844,7 +844,7 @@
       "clientReferences": [
         "packages/dsh_client/lib/src/features_api.dart"
       ],
-      "note": null
+      "note": "Atomic patches and revisions work for built-in native namespaces; plugin/provider namespaces are still pending."
     },
     {
       "endpoint": "skills/list",

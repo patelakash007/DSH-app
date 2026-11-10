@@ -54,6 +54,7 @@ def main() -> None:
                 "reference-discovery-v1",
                 "session-control-v1",
                 "session-fork-v1",
+                "settings-v1",
                 "skills-v1",
                 "terminal-shell-v1",
                 "workspaces-v1",
