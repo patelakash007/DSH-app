@@ -291,6 +291,16 @@ void main() {
       expect((commands! as List).whereType<Map>().map((command) => command['name']), contains('permission'));
     });
 
+    test('native continued question answers are truthful', () async {
+      final sessionId = (await client.createSession()).sessionId;
+      expect(
+        await client.answerContinuedQuestion(sessionId, 'missing-native-call', const [
+          QuestionAnswer('q1', selected: ['Go']),
+        ]),
+        isFalse,
+      );
+    });
+
     test('native subagent routing errors', () async {
       const missing = SubagentAddress(
         parentSessionId: 'missing-native-parent',

@@ -4,14 +4,14 @@
   "counts": {
     "rpc": {
       "total": 111,
-      "implemented": 79,
-      "in-progress": 31,
+      "implemented": 80,
+      "in-progress": 30,
       "blocked": 1
     },
     "mux": {
       "total": 12,
-      "implemented": 8,
-      "in-progress": 4
+      "implemented": 9,
+      "in-progress": 3
     },
     "http": {
       "total": 6,
@@ -1008,9 +1008,9 @@
     },
     {
       "endpoint": "userQuestions/answer",
-      "status": "in-progress",
+      "status": "implemented",
       "owner": "native-engine",
-      "test": null,
+      "test": "packages/dsh_client/test/native_go_contract_test.dart",
       "clientReferences": [
         "packages/dsh_client/lib/src/session_api.dart"
       ],
@@ -1232,9 +1232,9 @@
     },
     {
       "endpoint": "userQuestions/attachWait",
-      "status": "in-progress",
+      "status": "implemented",
       "owner": "native-engine",
-      "test": null,
+      "test": "packages/dsh_client/test/native_go_contract_test.dart",
       "clientReferences": [
         "packages/dsh_client/lib/src/session_api.dart"
       ],

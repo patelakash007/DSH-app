@@ -60,6 +60,7 @@ def main() -> None:
                 "schedules-v1",
                 "session-export-v1",
                 "subagents-v1",
+                "user-questions-v1",
                 "session-control-v1",
                 "session-fork-v1",
                 "settings-v1",
