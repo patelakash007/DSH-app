@@ -1,0 +1,1316 @@
+{
+  "schemaVersion": 1,
+  "description": "Literal local-engine contract used by the preserved Flutter/Dart client.",
+  "counts": {
+    "rpc": {
+      "total": 111,
+      "implemented": 23,
+      "in-progress": 80,
+      "placeholder": 8
+    },
+    "mux": {
+      "total": 10,
+      "implemented": 4,
+      "in-progress": 6
+    },
+    "http": {
+      "total": 6,
+      "in-progress": 4,
+      "implemented": 2
+    }
+  },
+  "rpc": [
+    {
+      "endpoint": "$events/result",
+      "status": "implemented",
+      "owner": "native-engine",
+      "test": "DSH-go-rewrite/cmd/dsh-server/server_test.go#TestNativeAgentToolApprovalAndHistory",
+      "clientReferences": [
+        "app/lib/notify/answer_native_request.dart",
+        "packages/dsh_client/lib/src/session_api.dart"
+      ],
+      "note": null
+    },
+    {
+      "endpoint": "account/cancelSignIn",
+      "status": "in-progress",
+      "owner": "native-engine",
+      "test": null,
+      "clientReferences": [
+        "app/lib/state/account_api.dart"
+      ],
+      "note": null
+    },
+    {
+      "endpoint": "account/getBalance",
+      "status": "in-progress",
+      "owner": "native-engine",
+      "test": null,
+      "clientReferences": [
+        "app/lib/state/account_api.dart"
+      ],
+      "note": null
+    },
+    {
+      "endpoint": "account/getProfile",
+      "status": "in-progress",
+      "owner": "native-engine",
+      "test": null,
+      "clientReferences": [
+        "app/lib/state/account_api.dart"
+      ],
+      "note": null
+    },
+    {
+      "endpoint": "account/getState",
+      "status": "in-progress",
+      "owner": "native-engine",
+      "test": null,
+      "clientReferences": [
+        "app/lib/state/account_api.dart"
+      ],
+      "note": null
+    },
+    {
+      "endpoint": "account/hasRunningAccountTasks",
+      "status": "in-progress",
+      "owner": "native-engine",
+      "test": null,
+      "clientReferences": [
+        "app/lib/state/account_api.dart"
+      ],
+      "note": null
+    },
+    {
+      "endpoint": "account/signOut",
+      "status": "in-progress",
+      "owner": "native-engine",
+      "test": null,
+      "clientReferences": [
+        "app/lib/state/account_api.dart"
+      ],
+      "note": null
+    },
+    {
+      "endpoint": "account/startSignIn",
+      "status": "in-progress",
+      "owner": "native-engine",
+      "test": null,
+      "clientReferences": [
+        "app/lib/state/account_api.dart"
+      ],
+      "note": null
+    },
+    {
+      "endpoint": "agentPresets/list",
+      "status": "placeholder",
+      "owner": "native-engine",
+      "test": null,
+      "clientReferences": [
+        "packages/dsh_client/lib/src/features_api.dart"
+      ],
+      "note": "Native preset composition is not implemented yet."
+    },
+    {
+      "endpoint": "agentPresets/read",
+      "status": "in-progress",
+      "owner": "native-engine",
+      "test": null,
+      "clientReferences": [
+        "packages/dsh_client/lib/src/features_api.dart"
+      ],
+      "note": null
+    },
+    {
+      "endpoint": "agentPresets/select",
+      "status": "in-progress",
+      "owner": "native-engine",
+      "test": null,
+      "clientReferences": [
+        "packages/dsh_client/lib/src/editors_api.dart"
+      ],
+      "note": null
+    },
+    {
+      "endpoint": "appAuth/answer",
+      "status": "in-progress",
+      "owner": "native-engine",
+      "test": null,
+      "clientReferences": [
+        "packages/dsh_client/lib/src/subscriptions_api.dart"
+      ],
+      "note": null
+    },
+    {
+      "endpoint": "appAuth/begin",
+      "status": "in-progress",
+      "owner": "native-engine",
+      "test": null,
+      "clientReferences": [
+        "packages/dsh_client/lib/src/subscriptions_api.dart"
+      ],
+      "note": null
+    },
+    {
+      "endpoint": "appAuth/cancel",
+      "status": "in-progress",
+      "owner": "native-engine",
+      "test": null,
+      "clientReferences": [
+        "packages/dsh_client/lib/src/subscriptions_api.dart"
+      ],
+      "note": null
+    },
+    {
+      "endpoint": "appAuth/list",
+      "status": "in-progress",
+      "owner": "native-engine",
+      "test": null,
+      "clientReferences": [
+        "packages/dsh_client/lib/src/subscriptions_api.dart"
+      ],
+      "note": null
+    },
+    {
+      "endpoint": "appAuth/poll",
+      "status": "in-progress",
+      "owner": "native-engine",
+      "test": null,
+      "clientReferences": [
+        "packages/dsh_client/lib/src/subscriptions_api.dart"
+      ],
+      "note": null
+    },
+    {
+      "endpoint": "appAuth/signOut",
+      "status": "in-progress",
+      "owner": "native-engine",
+      "test": null,
+      "clientReferences": [
+        "packages/dsh_client/lib/src/subscriptions_api.dart"
+      ],
+      "note": null
+    },
+    {
+      "endpoint": "commands/execute",
+      "status": "implemented",
+      "owner": "native-engine",
+      "test": "packages/dsh_client/test/native_go_contract_test.dart",
+      "clientReferences": [
+        "packages/dsh_client/lib/src/session_api.dart"
+      ],
+      "note": null
+    },
+    {
+      "endpoint": "commands/list",
+      "status": "placeholder",
+      "owner": "native-engine",
+      "test": null,
+      "clientReferences": [
+        "app/lib/state/commands_state.dart"
+      ],
+      "note": "The native command catalogue is not implemented yet."
+    },
+    {
+      "endpoint": "cotTranslation/limits",
+      "status": "in-progress",
+      "owner": "native-engine",
+      "test": null,
+      "clientReferences": [
+        "packages/dsh_client/lib/src/cot_translation_api.dart"
+      ],
+      "note": null
+    },
+    {
+      "endpoint": "cotTranslation/translate",
+      "status": "in-progress",
+      "owner": "native-engine",
+      "test": null,
+      "clientReferences": [
+        "packages/dsh_client/lib/src/cot_translation_api.dart"
+      ],
+      "note": null
+    },
+    {
+      "endpoint": "credentials/describe",
+      "status": "implemented",
+      "owner": "native-engine",
+      "test": "packages/dsh_client/test/native_go_contract_test.dart",
+      "clientReferences": [
+        "packages/dsh_client/lib/src/session_api.dart"
+      ],
+      "note": null
+    },
+    {
+      "endpoint": "credentials/set",
+      "status": "implemented",
+      "owner": "native-engine",
+      "test": "packages/dsh_client/test/native_go_contract_test.dart",
+      "clientReferences": [
+        "packages/dsh_client/lib/src/session_api.dart"
+      ],
+      "note": null
+    },
+    {
+      "endpoint": "credentials/unset",
+      "status": "implemented",
+      "owner": "native-engine",
+      "test": "packages/dsh_client/test/native_go_contract_test.dart",
+      "clientReferences": [
+        "packages/dsh_client/lib/src/session_api.dart"
+      ],
+      "note": null
+    },
+    {
+      "endpoint": "directoryPicker/createDirectory",
+      "status": "in-progress",
+      "owner": "native-engine",
+      "test": null,
+      "clientReferences": [
+        "packages/dsh_client/lib/src/workspaces_api.dart"
+      ],
+      "note": null
+    },
+    {
+      "endpoint": "directoryPicker/list",
+      "status": "in-progress",
+      "owner": "native-engine",
+      "test": null,
+      "clientReferences": [
+        "packages/dsh_client/lib/src/session_api.dart",
+        "packages/dsh_client/lib/src/workspaces_api.dart"
+      ],
+      "note": null
+    },
+    {
+      "endpoint": "dynamicCordisRunner/inventory",
+      "status": "in-progress",
+      "owner": "native-engine",
+      "test": null,
+      "clientReferences": [
+        "packages/dsh_client/lib/src/cordis_api.dart"
+      ],
+      "note": null
+    },
+    {
+      "endpoint": "dynamicCordisRunner/stopFromPanel",
+      "status": "in-progress",
+      "owner": "native-engine",
+      "test": null,
+      "clientReferences": [
+        "packages/dsh_client/lib/src/cordis_api.dart"
+      ],
+      "note": null
+    },
+    {
+      "endpoint": "dynamicCordisRunner/undefineFromPanel",
+      "status": "in-progress",
+      "owner": "native-engine",
+      "test": null,
+      "clientReferences": [
+        "packages/dsh_client/lib/src/cordis_api.dart"
+      ],
+      "note": null
+    },
+    {
+      "endpoint": "fileReferences/list",
+      "status": "in-progress",
+      "owner": "native-engine",
+      "test": null,
+      "clientReferences": [
+        "packages/dsh_client/lib/src/references_api.dart"
+      ],
+      "note": null
+    },
+    {
+      "endpoint": "fileUploads/upload",
+      "status": "in-progress",
+      "owner": "native-engine",
+      "test": null,
+      "clientReferences": [
+        "packages/dsh_client/lib/src/session_api.dart"
+      ],
+      "note": null
+    },
+    {
+      "endpoint": "goals/clear",
+      "status": "in-progress",
+      "owner": "native-engine",
+      "test": null,
+      "clientReferences": [
+        "packages/dsh_client/lib/src/goals_api.dart"
+      ],
+      "note": null
+    },
+    {
+      "endpoint": "goals/complete",
+      "status": "in-progress",
+      "owner": "native-engine",
+      "test": null,
+      "clientReferences": [
+        "packages/dsh_client/lib/src/goals_api.dart"
+      ],
+      "note": null
+    },
+    {
+      "endpoint": "goals/create",
+      "status": "in-progress",
+      "owner": "native-engine",
+      "test": null,
+      "clientReferences": [
+        "packages/dsh_client/lib/src/goals_api.dart"
+      ],
+      "note": null
+    },
+    {
+      "endpoint": "goals/edit",
+      "status": "in-progress",
+      "owner": "native-engine",
+      "test": null,
+      "clientReferences": [
+        "packages/dsh_client/lib/src/goals_api.dart"
+      ],
+      "note": null
+    },
+    {
+      "endpoint": "goals/get",
+      "status": "in-progress",
+      "owner": "native-engine",
+      "test": null,
+      "clientReferences": [
+        "packages/dsh_client/lib/src/goals_api.dart"
+      ],
+      "note": null
+    },
+    {
+      "endpoint": "goals/pause",
+      "status": "in-progress",
+      "owner": "native-engine",
+      "test": null,
+      "clientReferences": [
+        "packages/dsh_client/lib/src/goals_api.dart"
+      ],
+      "note": null
+    },
+    {
+      "endpoint": "goals/resume",
+      "status": "in-progress",
+      "owner": "native-engine",
+      "test": null,
+      "clientReferences": [
+        "packages/dsh_client/lib/src/goals_api.dart"
+      ],
+      "note": null
+    },
+    {
+      "endpoint": "job/kill",
+      "status": "in-progress",
+      "owner": "native-engine",
+      "test": null,
+      "clientReferences": [
+        "packages/dsh_client/lib/src/features_api.dart"
+      ],
+      "note": null
+    },
+    {
+      "endpoint": "llm/discoverModels",
+      "status": "in-progress",
+      "owner": "native-engine",
+      "test": null,
+      "clientReferences": [
+        "packages/dsh_client/lib/src/providers_api.dart"
+      ],
+      "note": null
+    },
+    {
+      "endpoint": "llm/listConfigurableProviders",
+      "status": "placeholder",
+      "owner": "native-engine",
+      "test": null,
+      "clientReferences": [
+        "packages/dsh_client/lib/src/providers_api.dart"
+      ],
+      "note": "Only the built-in DeepSeek provider is currently exposed."
+    },
+    {
+      "endpoint": "llm/listProviders",
+      "status": "implemented",
+      "owner": "native-engine",
+      "test": "packages/dsh_client/test/native_go_contract_test.dart",
+      "clientReferences": [
+        "packages/dsh_client/lib/src/session_api.dart"
+      ],
+      "note": null
+    },
+    {
+      "endpoint": "messageFeedback/delete",
+      "status": "in-progress",
+      "owner": "native-engine",
+      "test": null,
+      "clientReferences": [
+        "packages/dsh_client/lib/src/messages_api.dart"
+      ],
+      "note": null
+    },
+    {
+      "endpoint": "messageFeedback/list",
+      "status": "in-progress",
+      "owner": "native-engine",
+      "test": null,
+      "clientReferences": [
+        "packages/dsh_client/lib/src/messages_api.dart"
+      ],
+      "note": null
+    },
+    {
+      "endpoint": "messageFeedback/put",
+      "status": "in-progress",
+      "owner": "native-engine",
+      "test": null,
+      "clientReferences": [
+        "packages/dsh_client/lib/src/messages_api.dart"
+      ],
+      "note": null
+    },
+    {
+      "endpoint": "officeToPdf/render",
+      "status": "in-progress",
+      "owner": "native-engine",
+      "test": null,
+      "clientReferences": [
+        "packages/dsh_client/lib/src/files_api.dart"
+      ],
+      "note": null
+    },
+    {
+      "endpoint": "permissionPresets/catalog",
+      "status": "implemented",
+      "owner": "native-engine",
+      "test": "packages/dsh_client/test/native_go_contract_test.dart",
+      "clientReferences": [
+        "packages/dsh_client/lib/src/session_api.dart"
+      ],
+      "note": null
+    },
+    {
+      "endpoint": "pluginInventory/list",
+      "status": "placeholder",
+      "owner": "native-engine",
+      "test": null,
+      "clientReferences": [
+        "packages/dsh_client/lib/src/engine_settings_api.dart"
+      ],
+      "note": "Returns a truthful empty native inventory; native plugin management is not implemented."
+    },
+    {
+      "endpoint": "pluginManager/cancelInstall",
+      "status": "in-progress",
+      "owner": "native-engine",
+      "test": null,
+      "clientReferences": [
+        "packages/dsh_client/lib/src/plugins_api.dart"
+      ],
+      "note": null
+    },
+    {
+      "endpoint": "pluginManager/inspect",
+      "status": "in-progress",
+      "owner": "native-engine",
+      "test": null,
+      "clientReferences": [
+        "packages/dsh_client/lib/src/plugins_api.dart"
+      ],
+      "note": null
+    },
+    {
+      "endpoint": "pluginManager/installBundle",
+      "status": "in-progress",
+      "owner": "native-engine",
+      "test": null,
+      "clientReferences": [
+        "packages/dsh_client/lib/src/plugins_api.dart"
+      ],
+      "note": null
+    },
+    {
+      "endpoint": "pluginManager/listBundles",
+      "status": "placeholder",
+      "owner": "native-engine",
+      "test": null,
+      "clientReferences": [
+        "packages/dsh_client/lib/src/plugins_api.dart"
+      ],
+      "note": "Native plugin bundles are not implemented."
+    },
+    {
+      "endpoint": "pluginManager/listPlugins",
+      "status": "placeholder",
+      "owner": "native-engine",
+      "test": null,
+      "clientReferences": [
+        "packages/dsh_client/lib/src/plugins_api.dart"
+      ],
+      "note": "Native plugin lifecycle is not implemented."
+    },
+    {
+      "endpoint": "pluginManager/registries",
+      "status": "in-progress",
+      "owner": "native-engine",
+      "test": null,
+      "clientReferences": [
+        "packages/dsh_client/lib/src/plugins_api.dart"
+      ],
+      "note": null
+    },
+    {
+      "endpoint": "pluginManager/removeBundle",
+      "status": "in-progress",
+      "owner": "native-engine",
+      "test": null,
+      "clientReferences": [
+        "packages/dsh_client/lib/src/plugins_api.dart"
+      ],
+      "note": null
+    },
+    {
+      "endpoint": "pluginManager/setBundleEnabled",
+      "status": "in-progress",
+      "owner": "native-engine",
+      "test": null,
+      "clientReferences": [
+        "packages/dsh_client/lib/src/plugins_api.dart"
+      ],
+      "note": null
+    },
+    {
+      "endpoint": "pluginManager/setPluginEnabled",
+      "status": "in-progress",
+      "owner": "native-engine",
+      "test": null,
+      "clientReferences": [
+        "packages/dsh_client/lib/src/plugins_api.dart"
+      ],
+      "note": null
+    },
+    {
+      "endpoint": "pluginManager/waitForInstall",
+      "status": "in-progress",
+      "owner": "native-engine",
+      "test": null,
+      "clientReferences": [
+        "packages/dsh_client/lib/src/plugins_api.dart"
+      ],
+      "note": null
+    },
+    {
+      "endpoint": "schedule/catalog",
+      "status": "in-progress",
+      "owner": "native-engine",
+      "test": null,
+      "clientReferences": [
+        "packages/dsh_client/lib/src/features_api.dart"
+      ],
+      "note": null
+    },
+    {
+      "endpoint": "schedule/delete",
+      "status": "in-progress",
+      "owner": "native-engine",
+      "test": null,
+      "clientReferences": [
+        "packages/dsh_client/lib/src/features_api.dart"
+      ],
+      "note": null
+    },
+    {
+      "endpoint": "schedule/edit",
+      "status": "in-progress",
+      "owner": "native-engine",
+      "test": null,
+      "clientReferences": [
+        "packages/dsh_client/lib/src/features_api.dart"
+      ],
+      "note": null
+    },
+    {
+      "endpoint": "schedule/history",
+      "status": "in-progress",
+      "owner": "native-engine",
+      "test": null,
+      "clientReferences": [
+        "packages/dsh_client/lib/src/features_api.dart"
+      ],
+      "note": null
+    },
+    {
+      "endpoint": "schedule/run",
+      "status": "in-progress",
+      "owner": "native-engine",
+      "test": null,
+      "clientReferences": [
+        "packages/dsh_client/lib/src/features_api.dart"
+      ],
+      "note": null
+    },
+    {
+      "endpoint": "schedule/update",
+      "status": "in-progress",
+      "owner": "native-engine",
+      "test": null,
+      "clientReferences": [
+        "packages/dsh_client/lib/src/editors_api.dart",
+        "packages/dsh_client/lib/src/features_api.dart"
+      ],
+      "note": null
+    },
+    {
+      "endpoint": "session/attachment",
+      "status": "in-progress",
+      "owner": "native-engine",
+      "test": null,
+      "clientReferences": [
+        "packages/dsh_client/lib/src/session_api.dart"
+      ],
+      "note": null
+    },
+    {
+      "endpoint": "session/cancel",
+      "status": "implemented",
+      "owner": "native-engine",
+      "test": "packages/dsh_client/test/native_go_contract_test.dart",
+      "clientReferences": [
+        "packages/dsh_client/lib/src/session_api.dart"
+      ],
+      "note": null
+    },
+    {
+      "endpoint": "session/create",
+      "status": "implemented",
+      "owner": "native-engine",
+      "test": "packages/dsh_client/test/native_go_contract_test.dart",
+      "clientReferences": [
+        "packages/dsh_client/lib/src/session_api.dart"
+      ],
+      "note": null
+    },
+    {
+      "endpoint": "session/fork",
+      "status": "in-progress",
+      "owner": "native-engine",
+      "test": null,
+      "clientReferences": [
+        "packages/dsh_client/lib/src/session_api.dart"
+      ],
+      "note": null
+    },
+    {
+      "endpoint": "session/initializeDefaultModel",
+      "status": "in-progress",
+      "owner": "native-engine",
+      "test": null,
+      "clientReferences": [
+        "app/lib/state/account_api.dart"
+      ],
+      "note": null
+    },
+    {
+      "endpoint": "session/list",
+      "status": "implemented",
+      "owner": "native-engine",
+      "test": "packages/dsh_client/test/native_go_contract_test.dart",
+      "clientReferences": [
+        "packages/dsh_client/lib/src/session_api.dart"
+      ],
+      "note": null
+    },
+    {
+      "endpoint": "session/modelCatalog",
+      "status": "implemented",
+      "owner": "native-engine",
+      "test": "packages/dsh_client/test/native_go_contract_test.dart",
+      "clientReferences": [
+        "packages/dsh_client/lib/src/session_api.dart"
+      ],
+      "note": null
+    },
+    {
+      "endpoint": "session/page",
+      "status": "implemented",
+      "owner": "native-engine",
+      "test": "packages/dsh_client/test/native_go_contract_test.dart",
+      "clientReferences": [
+        "packages/dsh_client/lib/src/session_api.dart"
+      ],
+      "note": null
+    },
+    {
+      "endpoint": "session/projections",
+      "status": "implemented",
+      "owner": "native-engine",
+      "test": "packages/dsh_client/test/native_go_contract_test.dart",
+      "clientReferences": [
+        "packages/dsh_client/lib/src/session_api.dart"
+      ],
+      "note": null
+    },
+    {
+      "endpoint": "session/prompt",
+      "status": "implemented",
+      "owner": "native-engine",
+      "test": "packages/dsh_client/test/native_go_contract_test.dart",
+      "clientReferences": [
+        "packages/dsh_client/lib/src/session_api.dart"
+      ],
+      "note": null
+    },
+    {
+      "endpoint": "session/rename",
+      "status": "implemented",
+      "owner": "native-engine",
+      "test": "packages/dsh_client/test/native_go_contract_test.dart",
+      "clientReferences": [
+        "packages/dsh_client/lib/src/session_api.dart"
+      ],
+      "note": null
+    },
+    {
+      "endpoint": "session/search",
+      "status": "implemented",
+      "owner": "native-engine",
+      "test": "packages/dsh_client/test/native_go_contract_test.dart",
+      "clientReferences": [
+        "packages/dsh_client/lib/src/session_api.dart"
+      ],
+      "note": null
+    },
+    {
+      "endpoint": "session/selectModel",
+      "status": "implemented",
+      "owner": "native-engine",
+      "test": "packages/dsh_client/test/native_go_contract_test.dart",
+      "clientReferences": [
+        "packages/dsh_client/lib/src/session_api.dart"
+      ],
+      "note": null
+    },
+    {
+      "endpoint": "session/updateQueue",
+      "status": "in-progress",
+      "owner": "native-engine",
+      "test": null,
+      "clientReferences": [
+        "packages/dsh_client/lib/src/session_api.dart"
+      ],
+      "note": null
+    },
+    {
+      "endpoint": "sessionReferenceResolver/candidates",
+      "status": "in-progress",
+      "owner": "native-engine",
+      "test": null,
+      "clientReferences": [
+        "packages/dsh_client/lib/src/references_api.dart"
+      ],
+      "note": null
+    },
+    {
+      "endpoint": "settings/describe",
+      "status": "placeholder",
+      "owner": "native-engine",
+      "test": null,
+      "clientReferences": [
+        "app/lib/dev/remote_p2p_probe_main.dart",
+        "packages/dsh_client/lib/src/engine_settings_api.dart",
+        "packages/dsh_client/lib/src/features_api.dart"
+      ],
+      "note": "Native schema-driven settings are not implemented."
+    },
+    {
+      "endpoint": "settings/mutate",
+      "status": "in-progress",
+      "owner": "native-engine",
+      "test": null,
+      "clientReferences": [
+        "packages/dsh_client/lib/src/engine_settings_api.dart",
+        "packages/dsh_client/lib/src/features_api.dart"
+      ],
+      "note": null
+    },
+    {
+      "endpoint": "settings/update",
+      "status": "in-progress",
+      "owner": "native-engine",
+      "test": null,
+      "clientReferences": [
+        "packages/dsh_client/lib/src/features_api.dart"
+      ],
+      "note": null
+    },
+    {
+      "endpoint": "skills/list",
+      "status": "placeholder",
+      "owner": "native-engine",
+      "test": null,
+      "clientReferences": [
+        "packages/dsh_client/lib/src/features_api.dart"
+      ],
+      "note": "Native skill discovery is not implemented."
+    },
+    {
+      "endpoint": "speech/cancelPreparation",
+      "status": "in-progress",
+      "owner": "native-engine",
+      "test": null,
+      "clientReferences": [
+        "packages/dsh_client/lib/src/speech_api.dart"
+      ],
+      "note": null
+    },
+    {
+      "endpoint": "speech/catalog",
+      "status": "in-progress",
+      "owner": "native-engine",
+      "test": null,
+      "clientReferences": [
+        "packages/dsh_client/lib/src/speech_api.dart"
+      ],
+      "note": null
+    },
+    {
+      "endpoint": "speech/configure",
+      "status": "in-progress",
+      "owner": "native-engine",
+      "test": null,
+      "clientReferences": [
+        "packages/dsh_client/lib/src/speech_api.dart"
+      ],
+      "note": null
+    },
+    {
+      "endpoint": "speech/prepare",
+      "status": "in-progress",
+      "owner": "native-engine",
+      "test": null,
+      "clientReferences": [
+        "packages/dsh_client/lib/src/speech_api.dart"
+      ],
+      "note": null
+    },
+    {
+      "endpoint": "speech/transcribe",
+      "status": "in-progress",
+      "owner": "native-engine",
+      "test": null,
+      "clientReferences": [
+        "packages/dsh_client/lib/src/speech_api.dart"
+      ],
+      "note": null
+    },
+    {
+      "endpoint": "subagents/interruptByParent",
+      "status": "in-progress",
+      "owner": "native-engine",
+      "test": null,
+      "clientReferences": [
+        "packages/dsh_client/lib/src/agents_api.dart"
+      ],
+      "note": null
+    },
+    {
+      "endpoint": "subagents/prompt",
+      "status": "in-progress",
+      "owner": "native-engine",
+      "test": null,
+      "clientReferences": [
+        "packages/dsh_client/lib/src/agents_api.dart"
+      ],
+      "note": null
+    },
+    {
+      "endpoint": "terminal/close",
+      "status": "in-progress",
+      "owner": "native-engine",
+      "test": null,
+      "clientReferences": [
+        "packages/dsh_client/lib/src/terminal_api.dart"
+      ],
+      "note": null
+    },
+    {
+      "endpoint": "terminal/create",
+      "status": "in-progress",
+      "owner": "native-engine",
+      "test": null,
+      "clientReferences": [
+        "packages/dsh_client/lib/src/terminal_api.dart"
+      ],
+      "note": null
+    },
+    {
+      "endpoint": "terminal/environment",
+      "status": "in-progress",
+      "owner": "native-engine",
+      "test": null,
+      "clientReferences": [
+        "packages/dsh_client/lib/src/terminal_api.dart"
+      ],
+      "note": null
+    },
+    {
+      "endpoint": "terminal/list",
+      "status": "in-progress",
+      "owner": "native-engine",
+      "test": null,
+      "clientReferences": [
+        "packages/dsh_client/lib/src/terminal_api.dart"
+      ],
+      "note": null
+    },
+    {
+      "endpoint": "terminal/rename",
+      "status": "in-progress",
+      "owner": "native-engine",
+      "test": null,
+      "clientReferences": [
+        "packages/dsh_client/lib/src/terminal_api.dart"
+      ],
+      "note": null
+    },
+    {
+      "endpoint": "terminal/resize",
+      "status": "in-progress",
+      "owner": "native-engine",
+      "test": null,
+      "clientReferences": [
+        "packages/dsh_client/lib/src/terminal_api.dart"
+      ],
+      "note": null
+    },
+    {
+      "endpoint": "terminal/shells",
+      "status": "in-progress",
+      "owner": "native-engine",
+      "test": null,
+      "clientReferences": [
+        "packages/dsh_client/lib/src/terminal_api.dart"
+      ],
+      "note": null
+    },
+    {
+      "endpoint": "terminal/write",
+      "status": "in-progress",
+      "owner": "native-engine",
+      "test": null,
+      "clientReferences": [
+        "packages/dsh_client/lib/src/terminal_api.dart"
+      ],
+      "note": null
+    },
+    {
+      "endpoint": "userQuestions/answer",
+      "status": "in-progress",
+      "owner": "native-engine",
+      "test": null,
+      "clientReferences": [
+        "packages/dsh_client/lib/src/session_api.dart"
+      ],
+      "note": null
+    },
+    {
+      "endpoint": "workspace/archiveSession",
+      "status": "implemented",
+      "owner": "native-engine",
+      "test": "packages/dsh_client/test/native_go_contract_test.dart",
+      "clientReferences": [
+        "packages/dsh_client/lib/src/session_api.dart"
+      ],
+      "note": null
+    },
+    {
+      "endpoint": "workspace/create",
+      "status": "in-progress",
+      "owner": "native-engine",
+      "test": null,
+      "clientReferences": [
+        "packages/dsh_client/lib/src/session_api.dart"
+      ],
+      "note": null
+    },
+    {
+      "endpoint": "workspace/delete",
+      "status": "in-progress",
+      "owner": "native-engine",
+      "test": null,
+      "clientReferences": [
+        "packages/dsh_client/lib/src/workspaces_api.dart"
+      ],
+      "note": null
+    },
+    {
+      "endpoint": "workspace/insertBefore",
+      "status": "in-progress",
+      "owner": "native-engine",
+      "test": null,
+      "clientReferences": [
+        "packages/dsh_client/lib/src/workspaces_api.dart"
+      ],
+      "note": null
+    },
+    {
+      "endpoint": "workspace/pinSession",
+      "status": "in-progress",
+      "owner": "native-engine",
+      "test": null,
+      "clientReferences": [
+        "packages/dsh_client/lib/src/workspaces_api.dart"
+      ],
+      "note": null
+    },
+    {
+      "endpoint": "workspace/rename",
+      "status": "in-progress",
+      "owner": "native-engine",
+      "test": null,
+      "clientReferences": [
+        "packages/dsh_client/lib/src/workspaces_api.dart"
+      ],
+      "note": null
+    },
+    {
+      "endpoint": "workspace/unarchiveSession",
+      "status": "implemented",
+      "owner": "native-engine",
+      "test": "packages/dsh_client/test/native_go_contract_test.dart",
+      "clientReferences": [
+        "packages/dsh_client/lib/src/session_api.dart"
+      ],
+      "note": null
+    },
+    {
+      "endpoint": "workspace/unpinSession",
+      "status": "in-progress",
+      "owner": "native-engine",
+      "test": null,
+      "clientReferences": [
+        "packages/dsh_client/lib/src/workspaces_api.dart"
+      ],
+      "note": null
+    },
+    {
+      "endpoint": "workspaceFiles/list",
+      "status": "implemented",
+      "owner": "native-engine",
+      "test": "DSH-go-rewrite/cmd/dsh-server/server_test.go#TestWorkspaceRPCConfinesAndReadsFiles",
+      "clientReferences": [
+        "packages/dsh_client/lib/src/workspace_api.dart"
+      ],
+      "note": null
+    },
+    {
+      "endpoint": "workspaceFiles/read",
+      "status": "implemented",
+      "owner": "native-engine",
+      "test": "DSH-go-rewrite/cmd/dsh-server/server_test.go#TestWorkspaceRPCConfinesAndReadsFiles",
+      "clientReferences": [
+        "packages/dsh_client/lib/src/workspace_api.dart"
+      ],
+      "note": null
+    },
+    {
+      "endpoint": "workspaceFiles/readBytes",
+      "status": "implemented",
+      "owner": "native-engine",
+      "test": "DSH-go-rewrite/cmd/dsh-server/server_test.go#TestWorkspaceRPCConfinesAndReadsFiles",
+      "clientReferences": [
+        "packages/dsh_client/lib/src/files_api.dart",
+        "packages/dsh_client/lib/src/workspace_api.dart"
+      ],
+      "note": null
+    },
+    {
+      "endpoint": "workspaceFiles/stat",
+      "status": "implemented",
+      "owner": "native-engine",
+      "test": "DSH-go-rewrite/cmd/dsh-server/server_test.go#TestWorkspaceRPCConfinesAndReadsFiles",
+      "clientReferences": [
+        "packages/dsh_client/lib/src/files_api.dart"
+      ],
+      "note": null
+    }
+  ],
+  "mux": [
+    {
+      "endpoint": "$events",
+      "status": "implemented",
+      "owner": "native-engine",
+      "test": "packages/dsh_client/test/native_go_contract_test.dart",
+      "clientReferences": [
+        "packages/dsh_client/lib/src/mux.dart"
+      ],
+      "note": null
+    },
+    {
+      "endpoint": "account/watch",
+      "status": "in-progress",
+      "owner": "native-engine",
+      "test": null,
+      "clientReferences": [
+        "app/lib/state/account_api.dart"
+      ],
+      "note": null
+    },
+    {
+      "endpoint": "session/control",
+      "status": "in-progress",
+      "owner": "native-engine",
+      "test": null,
+      "clientReferences": [
+        "packages/dsh_client/lib/src/session_api.dart"
+      ],
+      "note": null
+    },
+    {
+      "endpoint": "session/follow",
+      "status": "implemented",
+      "owner": "native-engine",
+      "test": "packages/dsh_client/test/native_go_contract_test.dart",
+      "clientReferences": [
+        "packages/dsh_client/lib/src/session_activation.dart",
+        "packages/dsh_client/lib/src/session_api.dart"
+      ],
+      "note": null
+    },
+    {
+      "endpoint": "terminal/attach",
+      "status": "in-progress",
+      "owner": "native-engine",
+      "test": null,
+      "clientReferences": [
+        "packages/dsh_client/lib/src/terminal_api.dart"
+      ],
+      "note": null
+    },
+    {
+      "endpoint": "terminal/follow",
+      "status": "in-progress",
+      "owner": "native-engine",
+      "test": null,
+      "clientReferences": [
+        "packages/dsh_client/lib/src/terminal_api.dart"
+      ],
+      "note": null
+    },
+    {
+      "endpoint": "terminal/retain",
+      "status": "in-progress",
+      "owner": "native-engine",
+      "test": null,
+      "clientReferences": [
+        "packages/dsh_client/lib/src/terminal_api.dart"
+      ],
+      "note": null
+    },
+    {
+      "endpoint": "userQuestions/attachWait",
+      "status": "in-progress",
+      "owner": "native-engine",
+      "test": null,
+      "clientReferences": [
+        "packages/dsh_client/lib/src/session_api.dart"
+      ],
+      "note": null
+    },
+    {
+      "endpoint": "workspace/follow",
+      "status": "implemented",
+      "owner": "native-engine",
+      "test": "packages/dsh_client/test/native_go_contract_test.dart",
+      "clientReferences": [
+        "packages/dsh_client/lib/src/session_api.dart"
+      ],
+      "note": null
+    },
+    {
+      "endpoint": "workspaceFiles/changes",
+      "status": "implemented",
+      "owner": "native-engine",
+      "test": "DSH-go-rewrite/cmd/dsh-server/server_test.go#TestWorkspaceRPCConfinesAndReadsFiles",
+      "clientReferences": [
+        "packages/dsh_client/lib/src/workspace_api.dart"
+      ],
+      "note": null
+    }
+  ],
+  "http": [
+    {
+      "endpoint": "/api/bot",
+      "status": "in-progress",
+      "owner": "native-engine",
+      "test": null,
+      "clientReferences": [
+        "packages/dsh_client/lib/src/dsbot_api.dart"
+      ],
+      "note": null
+    },
+    {
+      "endpoint": "/api/bot/feed",
+      "status": "in-progress",
+      "owner": "native-engine",
+      "test": null,
+      "clientReferences": [
+        "packages/dsh_client/lib/src/dsbot_api.dart"
+      ],
+      "note": null
+    },
+    {
+      "endpoint": "/api/file",
+      "status": "implemented",
+      "owner": "native-engine",
+      "test": "packages/dsh_client/test/native_go_contract_test.dart",
+      "clientReferences": [
+        "packages/dsh_client/lib/src/files_api.dart"
+      ],
+      "note": null
+    },
+    {
+      "endpoint": "/api/remote.mux",
+      "status": "implemented",
+      "owner": "native-engine",
+      "test": "packages/dsh_client/test/native_go_contract_test.dart",
+      "clientReferences": [
+        "packages/dsh_client/lib/src/mux.dart"
+      ],
+      "note": null
+    },
+    {
+      "endpoint": "/api/session.export",
+      "status": "in-progress",
+      "owner": "native-engine",
+      "test": null,
+      "clientReferences": [
+        "packages/dsh_client/lib/src/session_export.dart"
+      ],
+      "note": null
+    },
+    {
+      "endpoint": "/api/session/uploadFileBinary",
+      "status": "in-progress",
+      "owner": "native-engine",
+      "test": null,
+      "clientReferences": [
+        "packages/dsh_client/lib/src/session_api.dart"
+      ],
+      "note": null
+    }
+  ],
+  "serverOnly": {
+    "rpc": [],
+    "mux": [],
+    "http": [
+      "/",
+      "/dsh-go/v1/info",
+      "/dsh-go/v1/sessions/delete",
+      "/dsh-go/v1/sessions/deletion"
+    ]
+  }
+}

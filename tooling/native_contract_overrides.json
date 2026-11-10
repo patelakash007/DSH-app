@@ -1,0 +1,22 @@
+{
+  "rpc": {
+    "agentPresets/list": "placeholder",
+    "commands/list": "placeholder",
+    "llm/listConfigurableProviders": "placeholder",
+    "pluginInventory/list": "placeholder",
+    "pluginManager/listBundles": "placeholder",
+    "pluginManager/listPlugins": "placeholder",
+    "settings/describe": "placeholder",
+    "skills/list": "placeholder"
+  },
+  "notes": {
+    "agentPresets/list": "Native preset composition is not implemented yet.",
+    "commands/list": "The native command catalogue is not implemented yet.",
+    "llm/listConfigurableProviders": "Only the built-in DeepSeek provider is currently exposed.",
+    "pluginInventory/list": "Returns a truthful empty native inventory; native plugin management is not implemented.",
+    "pluginManager/listBundles": "Native plugin bundles are not implemented.",
+    "pluginManager/listPlugins": "Native plugin lifecycle is not implemented.",
+    "settings/describe": "Native schema-driven settings are not implemented.",
+    "skills/list": "Native skill discovery is not implemented."
+  }
+}

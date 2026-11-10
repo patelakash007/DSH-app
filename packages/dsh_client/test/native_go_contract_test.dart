@@ -83,6 +83,31 @@ void main() {
       expect((await client.describeCredentials([ref]))[ref]?.configured, isFalse);
     });
 
+    test('native workspace list, stat, text, bytes, and confinement', () async {
+      final sessionId = (await client.createSession(cwd: '/root/workspace')).sessionId;
+      final listing = await client.listWorkspace(sessionId, '');
+      expect(listing.entries.map((entry) => entry.name), contains('contract.txt'));
+
+      final stat = await client.statFile(sessionId, 'contract.txt');
+      expect(stat.absolutePath, endsWith('/workspace/contract.txt'));
+      expect(stat.version, isNotEmpty);
+      expect(stat.bytes, greaterThan(0));
+
+      final text = await client.readWorkspaceText(sessionId, 'contract.txt', offset: 2, limit: 1);
+      expect(text.text, 'hello from native workspace');
+      expect(text.lines, 1);
+      expect(text.eof, isTrue);
+
+      final bytes = await client.readWorkspaceWindow(sessionId, 'contract.txt', length: 5);
+      expect(String.fromCharCodes(bytes.data), 'first');
+      expect(bytes.eof, isFalse);
+
+      await expectLater(
+        client.statFile(sessionId, '../outside'),
+        throwsA(isA<DshRemoteException>().having((e) => e.code, 'code', 'workspace-file/not-allowed')),
+      );
+    });
+
     test('workspace baseline and archive updates', () async {
       final sessionId = (await client.createSession(cwd: '/tmp/archive-workspace')).sessionId;
       final baseline = Completer<WorkspaceBaseline>();
