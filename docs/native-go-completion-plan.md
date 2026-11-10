@@ -34,7 +34,6 @@ Working end to end in the native server:
 Still in progress or blocked:
 
 - Subscription (`appAuth`) sign-in for ChatGPT/Claude; the native engine reports it as unavailable instead of pretending to start.
-- The `deepseek-account` model route: PKCE sign-in, profile and wallet queries work, but chat still uses the API-key route until an Anthropic Messages adapter is added for the account token.
 - Speech recognition bridge from the Go engine to the Android voice plugin (the optional SenseVoice bundle is not bundled).
 - Native plugin ABI and plugin migration (arbitrary Node/Cordis packages cannot run without Node; the plugin manager reports explicit unsupported responses).
 - DS Bot HTTP routes (`/api/bot`, `/api/bot/feed`) remain blocked because DS Bot is a Node plugin; the app shows its install card.

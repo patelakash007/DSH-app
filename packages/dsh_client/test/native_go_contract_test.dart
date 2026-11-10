@@ -310,6 +310,16 @@ void main() {
       expect(result.text, contains('Nothing to compact'));
     });
 
+    test('native account model route is unavailable when signed out', () async {
+      final catalog = await client.listModels();
+      expect(catalog.groups.map((group) => group.id), isNot(contains('deepseek-account')));
+      final sessionId = (await client.createSession()).sessionId;
+      await expectLater(
+        client.setModel(sessionId, provider: 'deepseek-account', model: 'deepseek-chat'),
+        throwsA(isA<DshRemoteException>().having((e) => e.code, 'code', 'session/model-unavailable')),
+      );
+    });
+
     test('native account sign-in validates its callback origin', () async {
       await expectLater(
         client.rpc.call('account/startSignIn', {
