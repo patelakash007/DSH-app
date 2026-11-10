@@ -4,8 +4,8 @@
   "counts": {
     "rpc": {
       "total": 111,
-      "implemented": 80,
-      "in-progress": 30,
+      "implemented": 82,
+      "in-progress": 28,
       "blocked": 1
     },
     "mux": {
@@ -213,23 +213,23 @@
     },
     {
       "endpoint": "cotTranslation/limits",
-      "status": "in-progress",
+      "status": "implemented",
       "owner": "native-engine",
-      "test": null,
+      "test": "packages/dsh_client/test/native_go_contract_test.dart",
       "clientReferences": [
         "packages/dsh_client/lib/src/cot_translation_api.dart"
       ],
-      "note": "Model-backed chain-of-thought translation is not wired yet."
+      "note": null
     },
     {
       "endpoint": "cotTranslation/translate",
-      "status": "in-progress",
+      "status": "implemented",
       "owner": "native-engine",
-      "test": null,
+      "test": "packages/dsh_client/test/native_go_contract_test.dart",
       "clientReferences": [
         "packages/dsh_client/lib/src/cot_translation_api.dart"
       ],
-      "note": "Model-backed chain-of-thought translation is not wired yet."
+      "note": null
     },
     {
       "endpoint": "credentials/describe",

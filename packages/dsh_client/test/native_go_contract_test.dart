@@ -291,6 +291,16 @@ void main() {
       expect((commands! as List).whereType<Map>().map((command) => command['name']), contains('permission'));
     });
 
+    test('native reasoning translation limits and failure', () async {
+      final limits = await client.cotTranslationLimits();
+      expect(limits.maxTextChars, 4000);
+      expect(limits.provider, 'deepseek-official');
+      await expectLater(
+        client.translateReasoning('reasoning', targetLanguage: 'English', provider: 'deepseek-official'),
+        throwsA(isA<DshRemoteException>().having((e) => e.code, 'code', 'cotTranslation/failed')),
+      );
+    });
+
     test('native continued question answers are truthful', () async {
       final sessionId = (await client.createSession()).sessionId;
       expect(
