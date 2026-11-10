@@ -4,9 +4,9 @@
   "counts": {
     "rpc": {
       "total": 111,
-      "implemented": 33,
-      "in-progress": 70,
-      "placeholder": 8
+      "implemented": 45,
+      "in-progress": 60,
+      "placeholder": 6
     },
     "mux": {
       "total": 10,
@@ -103,19 +103,19 @@
     },
     {
       "endpoint": "agentPresets/list",
-      "status": "placeholder",
+      "status": "implemented",
       "owner": "native-engine",
-      "test": null,
+      "test": "packages/dsh_client/test/native_go_contract_test.dart",
       "clientReferences": [
         "packages/dsh_client/lib/src/features_api.dart"
       ],
-      "note": "Native preset composition is not implemented yet."
+      "note": null
     },
     {
       "endpoint": "agentPresets/read",
-      "status": "in-progress",
+      "status": "implemented",
       "owner": "native-engine",
-      "test": null,
+      "test": "packages/dsh_client/test/native_go_contract_test.dart",
       "clientReferences": [
         "packages/dsh_client/lib/src/features_api.dart"
       ],
@@ -123,9 +123,9 @@
     },
     {
       "endpoint": "agentPresets/select",
-      "status": "in-progress",
+      "status": "implemented",
       "owner": "native-engine",
-      "test": null,
+      "test": "packages/dsh_client/test/native_go_contract_test.dart",
       "clientReferences": [
         "packages/dsh_client/lib/src/editors_api.dart"
       ],
@@ -263,9 +263,9 @@
     },
     {
       "endpoint": "directoryPicker/createDirectory",
-      "status": "in-progress",
+      "status": "implemented",
       "owner": "native-engine",
-      "test": null,
+      "test": "packages/dsh_client/test/native_go_contract_test.dart",
       "clientReferences": [
         "packages/dsh_client/lib/src/workspaces_api.dart"
       ],
@@ -273,9 +273,9 @@
     },
     {
       "endpoint": "directoryPicker/list",
-      "status": "in-progress",
+      "status": "implemented",
       "owner": "native-engine",
-      "test": null,
+      "test": "packages/dsh_client/test/native_go_contract_test.dart",
       "clientReferences": [
         "packages/dsh_client/lib/src/session_api.dart",
         "packages/dsh_client/lib/src/workspaces_api.dart"
@@ -848,13 +848,13 @@
     },
     {
       "endpoint": "skills/list",
-      "status": "placeholder",
+      "status": "implemented",
       "owner": "native-engine",
-      "test": null,
+      "test": "packages/dsh_client/test/native_go_contract_test.dart",
       "clientReferences": [
         "packages/dsh_client/lib/src/features_api.dart"
       ],
-      "note": "Native skill discovery is not implemented."
+      "note": null
     },
     {
       "endpoint": "speech/cancelPreparation",
@@ -1028,9 +1028,9 @@
     },
     {
       "endpoint": "workspace/create",
-      "status": "in-progress",
+      "status": "implemented",
       "owner": "native-engine",
-      "test": null,
+      "test": "packages/dsh_client/test/native_go_contract_test.dart",
       "clientReferences": [
         "packages/dsh_client/lib/src/session_api.dart"
       ],
@@ -1038,9 +1038,9 @@
     },
     {
       "endpoint": "workspace/delete",
-      "status": "in-progress",
+      "status": "implemented",
       "owner": "native-engine",
-      "test": null,
+      "test": "packages/dsh_client/test/native_go_contract_test.dart",
       "clientReferences": [
         "packages/dsh_client/lib/src/workspaces_api.dart"
       ],
@@ -1048,9 +1048,9 @@
     },
     {
       "endpoint": "workspace/insertBefore",
-      "status": "in-progress",
+      "status": "implemented",
       "owner": "native-engine",
-      "test": null,
+      "test": "packages/dsh_client/test/native_go_contract_test.dart",
       "clientReferences": [
         "packages/dsh_client/lib/src/workspaces_api.dart"
       ],
@@ -1058,9 +1058,9 @@
     },
     {
       "endpoint": "workspace/pinSession",
-      "status": "in-progress",
+      "status": "implemented",
       "owner": "native-engine",
-      "test": null,
+      "test": "packages/dsh_client/test/native_go_contract_test.dart",
       "clientReferences": [
         "packages/dsh_client/lib/src/workspaces_api.dart"
       ],
@@ -1068,9 +1068,9 @@
     },
     {
       "endpoint": "workspace/rename",
-      "status": "in-progress",
+      "status": "implemented",
       "owner": "native-engine",
-      "test": null,
+      "test": "packages/dsh_client/test/native_go_contract_test.dart",
       "clientReferences": [
         "packages/dsh_client/lib/src/workspaces_api.dart"
       ],
@@ -1088,9 +1088,9 @@
     },
     {
       "endpoint": "workspace/unpinSession",
-      "status": "in-progress",
+      "status": "implemented",
       "owner": "native-engine",
-      "test": null,
+      "test": "packages/dsh_client/test/native_go_contract_test.dart",
       "clientReferences": [
         "packages/dsh_client/lib/src/workspaces_api.dart"
       ],

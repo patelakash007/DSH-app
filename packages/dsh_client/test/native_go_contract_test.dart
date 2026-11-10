@@ -188,6 +188,65 @@ void main() {
       await client.closeTerminal(sessionId, id);
     });
 
+    test('native workspace registry, directory picker, pins, and grouping', () async {
+      final home = await client.browseDirectory();
+      expect(home.path, isNotEmpty);
+      final path = await client.createDirectory(home.path, 'contract-project');
+      final created = await client.createWorkspace(path);
+      expect(created.created, isTrue);
+      expect(created.workspace.path, path);
+      final renamed = await client.renameWorkspace(created.workspace.workspaceId, 'Contract Project');
+      expect(renamed.title, 'Contract Project');
+
+      final sessionId = (await client.createSession(workspaceId: renamed.workspaceId)).sessionId;
+      final summary = (await client.listSessions()).firstWhere((item) => item.sessionId == sessionId);
+      expect(summary.cwd, path);
+      expect(await client.pinSession(sessionId), contains(sessionId));
+      expect(await client.archiveSession(sessionId), contains(sessionId));
+      expect(await client.unarchiveSession(sessionId), isNot(contains(sessionId)));
+      expect(await client.unpinSession(sessionId), isNot(contains(sessionId)));
+      expect(await client.moveWorkspace(renamed.workspaceId), contains(renamed.workspaceId));
+      await client.deleteWorkspace(renamed.workspaceId);
+      expect(await Directory(path).exists(), isTrue, reason: 'workspace deletion must preserve the folder');
+    });
+
+    test('native skills and built-in agent preset', () async {
+      final sessionId = (await client.createSession()).sessionId;
+      final environment = await client.terminalEnvironment(sessionId);
+      final terminalId = newTerminalId();
+      await client.createTerminal(sessionId, id: terminalId, cols: 80, rows: 24);
+      final attachment = client.attachTerminal(sessionId, terminalId, environment: environment);
+      final snapshot = Completer<void>();
+      final ready = Completer<void>();
+      final frames = attachment.frames.listen((frame) {
+        if (frame is TerminalSnapshot && !snapshot.isCompleted) snapshot.complete();
+        if (frame is TerminalOutput && frame.data.contains('SKILL_READY') && !ready.isCompleted) ready.complete();
+      });
+      addTearDown(frames.cancel);
+      addTearDown(attachment.close);
+      await snapshot.future.timeout(const Duration(seconds: 10));
+      expect(
+        attachment.write(
+          "mkdir -p .dsh/skills/cloud-native && printf '%s\\n' '---' 'name: cloud-native' "
+          "'description: Cloud native contract skill' '---' 'Use native tools only.' "
+          "> .dsh/skills/cloud-native/SKILL.md && echo SKILL_READY\n",
+        ),
+        isTrue,
+      );
+      await ready.future.timeout(const Duration(seconds: 10));
+      final skills = await client.listSkills(sessionId);
+      final skill = skills.firstWhere((item) => item.name == 'cloud-native');
+      expect(skill.description, 'Cloud native contract skill');
+      expect(skill.modelInvocable, isTrue);
+      await client.closeTerminal(sessionId, terminalId);
+
+      final presets = await client.listAgentPresets();
+      expect(presets.map((preset) => preset.id), contains('native'));
+      final document = await client.readAgentPreset('native');
+      expect(document.content, contains('id: native'));
+      expect(await client.selectAgentPreset(sessionId, 'native'), 'native');
+    });
+
     test('session fork persists a closed history prefix', () async {
       final sourceId = (await client.createSession()).sessionId;
       final ended = Completer<TurnEndedEvent>();
