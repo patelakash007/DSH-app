@@ -4,8 +4,8 @@
   "counts": {
     "rpc": {
       "total": 111,
-      "implemented": 83,
-      "in-progress": 27,
+      "implemented": 86,
+      "in-progress": 24,
       "blocked": 1
     },
     "mux": {
@@ -815,36 +815,36 @@
     },
     {
       "endpoint": "settings/describe",
-      "status": "in-progress",
+      "status": "implemented",
       "owner": "native-engine",
-      "test": null,
+      "test": "packages/dsh_client/test/native_go_contract_test.dart",
       "clientReferences": [
         "app/lib/dev/remote_p2p_probe_main.dart",
         "packages/dsh_client/lib/src/engine_settings_api.dart",
         "packages/dsh_client/lib/src/features_api.dart"
       ],
-      "note": "Native settings are durable and schema-driven for built-in namespaces; plugin/provider namespaces are still pending."
+      "note": null
     },
     {
       "endpoint": "settings/mutate",
-      "status": "in-progress",
+      "status": "implemented",
       "owner": "native-engine",
-      "test": null,
+      "test": "packages/dsh_client/test/native_go_contract_test.dart",
       "clientReferences": [
         "packages/dsh_client/lib/src/engine_settings_api.dart",
         "packages/dsh_client/lib/src/features_api.dart"
       ],
-      "note": "Atomic set/unset and revisions work for built-in native namespaces; plugin/provider namespaces are still pending."
+      "note": null
     },
     {
       "endpoint": "settings/update",
-      "status": "in-progress",
+      "status": "implemented",
       "owner": "native-engine",
-      "test": null,
+      "test": "packages/dsh_client/test/native_go_contract_test.dart",
       "clientReferences": [
         "packages/dsh_client/lib/src/features_api.dart"
       ],
-      "note": "Atomic patches and revisions work for built-in native namespaces; plugin/provider namespaces are still pending."
+      "note": null
     },
     {
       "endpoint": "skills/list",

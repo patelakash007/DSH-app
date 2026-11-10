@@ -1,8 +1,5 @@
 {
   "rpc": {
-    "settings/describe": "in-progress",
-    "settings/mutate": "in-progress",
-    "settings/update": "in-progress",
     "terminal/close": "in-progress",
     "terminal/create": "in-progress",
     "terminal/environment": "in-progress",
@@ -35,9 +32,6 @@
     "terminal/retain": "in-progress"
   },
   "notes": {
-    "settings/describe": "Native settings are durable and schema-driven for built-in namespaces; plugin/provider namespaces are still pending.",
-    "settings/mutate": "Atomic set/unset and revisions work for built-in native namespaces; plugin/provider namespaces are still pending.",
-    "settings/update": "Atomic patches and revisions work for built-in native namespaces; plugin/provider namespaces are still pending.",
     "terminal/attach": "Native shell streaming works; true PTY allocation and kernel resize are still pending.",
     "terminal/close": "Native shell lifecycle works; true PTY process semantics are still pending.",
     "terminal/create": "Native shell lifecycle works; true PTY process semantics are still pending.",

@@ -291,6 +291,34 @@ void main() {
       expect((commands! as List).whereType<Map>().map((command) => command['name']), contains('permission'));
     });
 
+    test('native settings describe and mutate', () async {
+      final description = await client.describeSettings();
+      expect(
+        description.namespaces.keys,
+        containsAll(['agent-preset-registry', 'llm-pi-ai', 'native-engine']),
+      );
+      final view = description.namespaces['native-engine']!;
+      final updated = await client.mutateSettingsView(
+        'native-engine',
+        const [SettingsOp.set(['defaultPermission'], 'read-only')],
+        expectedRevision: view.revision,
+      );
+      expect(updated.value['defaultPermission'], 'read-only');
+      await expectLater(
+        client.mutateSettingsView(
+          'native-engine',
+          const [SettingsOp.set(['defaultPermission'], 'read-only')],
+          expectedRevision: view.revision,
+        ),
+        throwsA(isA<DshRemoteException>().having((e) => e.code, 'code', 'settings/conflict')),
+      );
+      await client.mutateSettingsView(
+        'native-engine',
+        const [SettingsOp.set(['defaultPermission'], 'auto')],
+        expectedRevision: updated.revision,
+      );
+    });
+
     test('native reference candidates', () async {
       final first = (await client.createSession()).sessionId;
       final second = (await client.createSession()).sessionId;
