@@ -1,35 +1,11 @@
-# AGENTS.md
+# DSH-app Vision
 
-DSH is an Android native client and runtime for DeepSeek Harness: a native Flutter UI, pure Dart clients, and an on-device native Go engine runtime. Before making changes, consult [CONTRIBUTING.md](CONTRIBUTING.md) and [docs/architecture.md](docs/architecture.md).
+DSH-app is Akash's ambitious project to make the DSH mobile experience a truly standalone native Android app.
 
-## Repository Layout
+Akash loved the Flutter UI from `ccch1mneyyy/dsh-Go`; its interface, themes, chats, and companions were already perfect and are not the problem. `JopenChen/dsh-go` showed that the DeepSeek Harness engine could be rewritten in Go.
 
-```text
-app/                         Flutter App: Native UI, Riverpod state management, phone control
-app/lib/l10n/parts/          UI localization ARB template inputs
-packages/dsh_client/         Pure Dart client: HTTP/SSE streaming, multiplexing, session APIs
-packages/dsh_remote/         Remote gateway transport: WebRTC, LAN, and relay connections
-runtime/                     Native runtime assets, engine bridge, and lifecycle management
-sdk/plugin-kit/              Plugin authoring SDK for custom tool widgets and cards
-tooling/                     Toolchain management, APK packaging, and diagnostic scripts
-docs/                        Architecture specifications, guides, and release documentation
-```
+The goal is to remove the non-native local engine stack—PRoot, Ubuntu/rootfs, Node.js, and any Termux or external runtime dependency—and replace it with a complete Android-native Go engine while keeping the existing UI unchanged.
 
-## Verification Commands
+Every important DSH capability should be wired, ported, migrated, or rewritten for native Android as needed, including tools, shell, files, search, web search, Git, GitHub, package and plugin management, phone control, voice, authentication, persistence, and recovery.
 
-Select relevant verification commands based on the affected scope:
-
-```bash
-(cd app && flutter pub get && flutter analyze && flutter test)      # Flutter app checks
-(cd packages/dsh_client && dart pub get && dart analyze && dart test) # Dart API client
-(cd packages/dsh_remote && dart pub get && dart analyze && dart test) # Dart Remote client
-(cd sdk/plugin-kit && npm install && npm test)                       # Plugin kit tests
-python3 -m unittest discover tooling                                 # Tooling unit tests
-```
-
-## Engineering Rules
-
-1. **Focused Diffs**: Solve the specified problem without unnecessary refactors or broad formatting drift.
-2. **Never Weaken Existing Tests**: Do not delete, skip, or modify tests to pass artificially.
-3. **Native Direct Execution**: Do not reintroduce containerized PRoot or Ubuntu chroot layers. All on-device components execute directly as native binaries.
-4. **License & Attribution Integrity**: Retain AGPL-3.0 and MIT license headers and attribution notices.
+The finished DSH-app must install and run by itself. Akash is ambitious enough to use AI to rewrite every engine-side component necessary to make that vision real.
