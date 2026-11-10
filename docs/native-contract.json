@@ -4,8 +4,8 @@
   "counts": {
     "rpc": {
       "total": 111,
-      "implemented": 51,
-      "in-progress": 56,
+      "implemented": 57,
+      "in-progress": 50,
       "placeholder": 4
     },
     "mux": {
@@ -604,9 +604,9 @@
     },
     {
       "endpoint": "schedule/catalog",
-      "status": "in-progress",
+      "status": "implemented",
       "owner": "native-engine",
-      "test": null,
+      "test": "packages/dsh_client/test/native_go_contract_test.dart",
       "clientReferences": [
         "packages/dsh_client/lib/src/features_api.dart"
       ],
@@ -614,9 +614,9 @@
     },
     {
       "endpoint": "schedule/delete",
-      "status": "in-progress",
+      "status": "implemented",
       "owner": "native-engine",
-      "test": null,
+      "test": "packages/dsh_client/test/native_go_contract_test.dart",
       "clientReferences": [
         "packages/dsh_client/lib/src/features_api.dart"
       ],
@@ -624,9 +624,9 @@
     },
     {
       "endpoint": "schedule/edit",
-      "status": "in-progress",
+      "status": "implemented",
       "owner": "native-engine",
-      "test": null,
+      "test": "packages/dsh_client/test/native_go_contract_test.dart",
       "clientReferences": [
         "packages/dsh_client/lib/src/features_api.dart"
       ],
@@ -634,9 +634,9 @@
     },
     {
       "endpoint": "schedule/history",
-      "status": "in-progress",
+      "status": "implemented",
       "owner": "native-engine",
-      "test": null,
+      "test": "packages/dsh_client/test/native_go_contract_test.dart",
       "clientReferences": [
         "packages/dsh_client/lib/src/features_api.dart"
       ],
@@ -644,9 +644,9 @@
     },
     {
       "endpoint": "schedule/run",
-      "status": "in-progress",
+      "status": "implemented",
       "owner": "native-engine",
-      "test": null,
+      "test": "packages/dsh_client/test/native_go_contract_test.dart",
       "clientReferences": [
         "packages/dsh_client/lib/src/features_api.dart"
       ],
@@ -654,9 +654,9 @@
     },
     {
       "endpoint": "schedule/update",
-      "status": "in-progress",
+      "status": "implemented",
       "owner": "native-engine",
-      "test": null,
+      "test": "packages/dsh_client/test/native_go_contract_test.dart",
       "clientReferences": [
         "packages/dsh_client/lib/src/editors_api.dart",
         "packages/dsh_client/lib/src/features_api.dart"

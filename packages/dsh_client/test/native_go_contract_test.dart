@@ -291,6 +291,28 @@ void main() {
       expect((commands! as List).whereType<Map>().map((command) => command['name']), contains('permission'));
     });
 
+    test('native schedule catalogue and missing-task errors', () async {
+      expect(await client.scheduleCatalog(), isEmpty);
+      const missing = ScheduleTask(
+        id: 'missing-native-schedule',
+        sessionId: null,
+        kind: 'every',
+        title: 'Missing',
+        prompt: 'Missing',
+        active: true,
+        record: {},
+        target: {'kind': 'new_once'},
+        updatedAt: '2026-11-10T00:00:00Z',
+      );
+      final history = await client.scheduleHistory(missing);
+      expect(history.missing, 'schedule_not_found');
+      expect(await client.deleteSchedule(missing), isFalse);
+      await expectLater(
+        client.runScheduledTask(missing),
+        throwsA(isA<DshRemoteException>().having((e) => e.code, 'code', 'schedule_not_found')),
+      );
+    });
+
     test('native background job stream and missing-job error', () async {
       final sessionId = (await client.createSession()).sessionId;
       final jobs = await client.watchJobs(sessionId).first.timeout(const Duration(seconds: 10));
