@@ -291,6 +291,53 @@ void main() {
       expect((commands! as List).whereType<Map>().map((command) => command['name']), contains('permission'));
     });
 
+    test('native custom provider settings, discovery, and routing', () async {
+      final upstream = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
+      addTearDown(() => upstream.close(force: true));
+      upstream.listen((request) async {
+        final response = request.response;
+        if (request.uri.path == '/v1/models') {
+          response.headers.contentType = ContentType.json;
+          response.write('{"data":[{"id":"native-model","name":"Native Model","context_window":32000}]}');
+        } else if (request.uri.path == '/v1/chat/completions') {
+          response.headers.contentType = ContentType('text', 'event-stream');
+          response.write('data: {"choices":[{"delta":{"content":"custom reply"}}]}\n\n');
+          response.write('data: [DONE]\n\n');
+        } else {
+          response.statusCode = HttpStatus.notFound;
+        }
+        await response.close();
+      });
+      const keyRef = 'CUSTOM_NATIVE_API_KEY';
+      await client.setProviderKey('custom-key', ref: keyRef);
+      final saved = await client.saveProvider(
+        ProviderProfile(
+          route: 'native-gateway',
+          displayName: 'Native Gateway',
+          api: ProviderApi.openaiCompletions.wire,
+          baseUrl: 'http://127.0.0.1:${upstream.port}/v1',
+          apiKeyEnv: keyRef,
+          models: const [ProviderModelSpec(id: 'native-model', name: 'Native Model')],
+        ),
+      );
+      expect(saved.byRoute('native-gateway')?.displayName, 'Native Gateway');
+      final providers = await client.listConfigurableProviders();
+      expect(providers.map((provider) => provider.provider), contains('native-gateway'));
+      final discovered = await client.discoverModels(
+        baseUrl: 'http://127.0.0.1:${upstream.port}/v1',
+        api: ProviderApi.openaiCompletions,
+        apiKey: 'custom-key',
+      );
+      expect(discovered.single.id, 'native-model');
+      final catalog = await client.listModels();
+      expect(catalog.groups.map((group) => group.id), contains('native-gateway'));
+      final sessionId = (await client.createSession()).sessionId;
+      final selection = await client.setModel(sessionId, provider: 'native-gateway', model: 'native-model');
+      expect(selection.provider, 'native-gateway');
+      expect(selection.model, 'native-model');
+      await client.clearProviderKey(ref: keyRef);
+    });
+
     test('native queue errors and default model initialization', () async {
       final sessionId = (await client.createSession()).sessionId;
       await expectLater(

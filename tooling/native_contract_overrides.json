@@ -1,6 +1,5 @@
 {
   "rpc": {
-    "llm/listConfigurableProviders": "placeholder",
     "pluginInventory/list": "placeholder",
     "pluginManager/listBundles": "placeholder",
     "pluginManager/listPlugins": "placeholder",
@@ -23,7 +22,6 @@
     "terminal/retain": "in-progress"
   },
   "notes": {
-    "llm/listConfigurableProviders": "Only the built-in DeepSeek provider is currently exposed.",
     "pluginInventory/list": "Returns a truthful empty native inventory; native plugin management is not implemented.",
     "pluginManager/listBundles": "Native plugin bundles are not implemented.",
     "pluginManager/listPlugins": "Native plugin lifecycle is not implemented.",

@@ -4,9 +4,9 @@
   "counts": {
     "rpc": {
       "total": 111,
-      "implemented": 59,
-      "in-progress": 48,
-      "placeholder": 4
+      "implemented": 61,
+      "in-progress": 47,
+      "placeholder": 3
     },
     "mux": {
       "total": 12,
@@ -414,9 +414,9 @@
     },
     {
       "endpoint": "llm/discoverModels",
-      "status": "in-progress",
+      "status": "implemented",
       "owner": "native-engine",
-      "test": null,
+      "test": "packages/dsh_client/test/native_go_contract_test.dart",
       "clientReferences": [
         "packages/dsh_client/lib/src/providers_api.dart"
       ],
@@ -424,13 +424,13 @@
     },
     {
       "endpoint": "llm/listConfigurableProviders",
-      "status": "placeholder",
+      "status": "implemented",
       "owner": "native-engine",
-      "test": null,
+      "test": "packages/dsh_client/test/native_go_contract_test.dart",
       "clientReferences": [
         "packages/dsh_client/lib/src/providers_api.dart"
       ],
-      "note": "Only the built-in DeepSeek provider is currently exposed."
+      "note": null
     },
     {
       "endpoint": "llm/listProviders",
