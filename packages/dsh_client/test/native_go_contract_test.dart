@@ -294,19 +294,19 @@ void main() {
     test('native plan and goal commands', () async {
       final sessionId = (await client.createSession()).sessionId;
       final plan = await client.executeCommand(sessionId, '/plan');
-      expect(plan.ok, isTrue);
+      expect(plan.success, isTrue);
       final goal = await client.executeCommand(sessionId, '/goal ship the native engine');
-      expect(goal.ok, isTrue);
+      expect(goal.success, isTrue);
       final summary = await client.executeCommand(sessionId, '/goal');
       expect(summary.text, contains('ship the native engine'));
       final cleared = await client.executeCommand(sessionId, '/goal clear');
-      expect(cleared.ok, isTrue);
+      expect(cleared.success, isTrue);
     });
 
     test('native compact command is truthful on an empty session', () async {
       final sessionId = (await client.createSession()).sessionId;
       final result = await client.executeCommand(sessionId, '/compact');
-      expect(result.ok, isTrue);
+      expect(result.success, isTrue);
       expect(result.text, contains('Nothing to compact'));
     });
 
