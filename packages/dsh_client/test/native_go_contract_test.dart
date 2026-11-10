@@ -291,6 +291,21 @@ void main() {
       expect((commands! as List).whereType<Map>().map((command) => command['name']), contains('permission'));
     });
 
+    test('native session export archive', () async {
+      final sessionId = (await client.createSession()).sessionId;
+      final ended = Completer<TurnEndedEvent>();
+      final watch = client.watch(sessionId).listen((event) {
+        if (event is TurnEndedEvent && !ended.isCompleted) ended.complete(event);
+      });
+      addTearDown(watch.cancel);
+      await client.prompt(sessionId, 'export this native session');
+      await ended.future.timeout(const Duration(seconds: 10));
+      final archive = await client.exportSessionLog(sessionId);
+      expect(archive.length, greaterThan(4));
+      expect(archive[0], 0x50); // P
+      expect(archive[1], 0x4b); // K
+    });
+
     test('native account, app-auth, and plugin capability states', () async {
       final account = await client.rpc.call('account/getState') as Map;
       expect(account['status'], 'signed-out');

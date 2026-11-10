@@ -15,8 +15,8 @@
     },
     "http": {
       "total": 6,
-      "in-progress": 3,
-      "implemented": 3
+      "in-progress": 2,
+      "implemented": 4
     }
   },
   "rpc": [
@@ -1304,9 +1304,9 @@
     },
     {
       "endpoint": "/api/session.export",
-      "status": "in-progress",
+      "status": "implemented",
       "owner": "native-engine",
-      "test": null,
+      "test": "packages/dsh_client/test/native_go_contract_test.dart",
       "clientReferences": [
         "packages/dsh_client/lib/src/session_export.dart"
       ],

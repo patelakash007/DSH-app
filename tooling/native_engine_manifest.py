@@ -58,6 +58,7 @@ def main() -> None:
                 "custom-providers-v1",
                 "prompt-queue-v1",
                 "schedules-v1",
+                "session-export-v1",
                 "session-control-v1",
                 "session-fork-v1",
                 "settings-v1",
