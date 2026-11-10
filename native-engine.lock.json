@@ -1,0 +1,7 @@
+{
+  "repository": "https://github.com/patelakash007/DSH-go-rewrite",
+  "revision": "66fdc335d9e181138765d30b6a45b22e856773e1",
+  "engineVersion": "1.1.0",
+  "protocolVersion": "native-v1",
+  "goVersion": "1.25.x"
+}

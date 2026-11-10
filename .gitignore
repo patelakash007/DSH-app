@@ -17,6 +17,8 @@ app/android/build/
 # build outputs never belong in git
 *.apk
 *.aab
+*.p12
+**/key.properties
 # golden-test failure dumps (flutter test writes them next to the goldens)
 **/test/**/failures/
 

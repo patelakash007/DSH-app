@@ -1,21 +1,279 @@
 name: Build Native DSH APK
-on: [workflow_dispatch, push]
+
+on:
+  workflow_dispatch:
+  pull_request:
+  push:
+    branches: [main]
+    tags: ['v*']
+
+permissions:
+  contents: read
+
+concurrency:
+  group: native-apk-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref_type != 'tag' }}
+
+env:
+  FLUTTER_VERSION: '3.47.7'
+  PUB_HOSTED_URL: https://pub.flutter-io.cn
+  EXPECTED_SIGNER_SHA256: 21f9053812645ea244277eafc236f37fc19f1b6ae07b70fee28aaf07de9bc058
+
 jobs:
-  build:
+  build-unsigned:
+    name: Test and build unsigned APKs
     runs-on: ubuntu-24.04
+    timeout-minutes: 60
     steps:
       - name: Checkout DSH-app
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
-          path: 'dsh-app'
+          path: dsh-app
+          persist-credentials: false
 
-      - name: Checkout DSH-go-rewrite
-        uses: actions/checkout@v4
+      - name: Read pinned engine revision
+        id: engine
+        working-directory: dsh-app
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY' >> "$GITHUB_OUTPUT"
+          import json
+          from pathlib import Path
+          lock = json.loads(Path('native-engine.lock.json').read_text())
+          revision = lock['revision']
+          if len(revision) != 40 or any(c not in '0123456789abcdef' for c in revision.lower()):
+              raise SystemExit('engine lock must contain a full Git commit')
+          print(f'revision={revision}')
+          print(f'go_version={lock["goVersion"]}')
+          print(f'engine_version={lock["engineVersion"]}')
+          print(f'protocol_version={lock["protocolVersion"]}')
+          PY
+
+      - name: Checkout pinned DSH-go-rewrite
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
-          repository: 'patelakash007/DSH-go-rewrite'
-          path: 'dsh-go-rewrite'
+          repository: patelakash007/DSH-go-rewrite
+          ref: ${{ steps.engine.outputs.revision }}
+          path: dsh-go-rewrite
+          persist-credentials: false
 
-      - name: Configure Stable Release Signing
+      - name: Verify clean engine source
+        working-directory: dsh-go-rewrite
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = '${{ steps.engine.outputs.revision }}'
+          git diff --quiet
+          git diff --cached --quiet
+          test -z "$(git status --porcelain)"
+
+      - name: Verify native contract inventory
+        working-directory: dsh-app
+        run: python3 tooling/native_contract_inventory.py --check --go-root ../dsh-go-rewrite
+
+      - name: Setup Java 17
+        uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Setup Go
+        uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5
+        with:
+          go-version: ${{ steps.engine.outputs.go_version }}
+          cache-dependency-path: dsh-go-rewrite/go.sum
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          cache: true
+
+      - name: Install Flutter's pinned Android NDK
+        id: ndk
+        shell: bash
+        run: |
+          set -euo pipefail
+          flutter_root=${FLUTTER_ROOT:-$(cd "$(dirname "$(command -v flutter)")/.." && pwd)}
+          sdk_root=${ANDROID_SDK_ROOT:-$ANDROID_HOME}
+          gradle_source=$(grep -rlE 'ndkVersion' "$flutter_root/packages/flutter_tools/gradle/src/main" | head -n 1)
+          ndk_version=$(grep -oE 'ndkVersion[^\"]*\"[0-9.]+\"' "$gradle_source" | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -n 1)
+          test -n "$ndk_version"
+          yes | sdkmanager --licenses >/dev/null || true
+          sdkmanager "ndk;$ndk_version"
+          ndk_home="$sdk_root/ndk/$ndk_version"
+          test -x "$ndk_home/toolchains/llvm/prebuilt/linux-x86_64/bin/x86_64-linux-android26-clang"
+          echo "home=$ndk_home" >> "$GITHUB_OUTPUT"
+
+      - name: Test Go engine
+        working-directory: dsh-go-rewrite
+        run: go test ./...
+
+      - name: Race-test native server and tools
+        working-directory: dsh-go-rewrite
+        run: go test -race ./cmd/dsh-server ./pkg/agent ./pkg/nativefs ./pkg/nativetools ./pkg/llm/provider_deepseek
+
+      - name: Test Dart client against Go engine
+        shell: bash
+        run: |
+          set -euo pipefail
+          host="$RUNNER_TEMP/dsh-server"
+          home="$RUNNER_TEMP/dsh-native-contract-home"
+          log="$RUNNER_TEMP/dsh-native-contract.log"
+          (cd dsh-go-rewrite && go build -trimpath -o "$host" ./cmd/dsh-server)
+          mkdir -p "$home/workspace"
+          printf 'first line\nhello from native workspace\n' > "$home/workspace/contract.txt"
+          "$host" --port 39080 --home "$home" >"$log" 2>&1 &
+          pid=$!
+          trap 'kill "$pid" 2>/dev/null || true; wait "$pid" 2>/dev/null || true' EXIT
+          for _ in $(seq 1 100); do
+            launch_url=$(sed -nE 's/^dsh web: (http.*)$/\1/p' "$log" | tail -n 1)
+            if [ -n "$launch_url" ]; then break; fi
+            if ! kill -0 "$pid" 2>/dev/null; then cat "$log"; exit 1; fi
+            sleep 0.1
+          done
+          test -n "${launch_url:-}" || { cat "$log"; exit 1; }
+          (cd dsh-app/packages/dsh_client && dart pub get --enforce-lockfile)
+          (cd dsh-app/packages/dsh_client && DSH_NATIVE_GO_LIVE_URL="$launch_url" dart test test/native_go_contract_test.dart --reporter expanded)
+
+      - name: Build clean native engines for both ABIs
+        shell: bash
+        env:
+          ENGINE_REVISION: ${{ steps.engine.outputs.revision }}
+          ENGINE_VERSION: ${{ steps.engine.outputs.engine_version }}
+          PROTOCOL_VERSION: ${{ steps.engine.outputs.protocol_version }}
+          NDK_HOME: ${{ steps.ndk.outputs.home }}
+        run: |
+          set -euo pipefail
+          mkdir -p dsh-app/app/android/app/src/main/jniLibs/arm64-v8a
+          mkdir -p dsh-app/app/android/app/src/main/jniLibs/x86_64
+          mkdir -p dsh-app/build/native-provenance
+          common="-s -w -X main.engineVersion=$ENGINE_VERSION -X main.protocolVersion=$PROTOCOL_VERSION -X main.sourceRevision=$ENGINE_REVISION -X main.sourceDirty=false"
+          (
+            cd dsh-go-rewrite
+            CGO_ENABLED=0 GOOS=android GOARCH=arm64 go build -trimpath -buildvcs=true \
+              -ldflags="$common -X main.buildABI=arm64-v8a" \
+              -o ../dsh-app/app/android/app/src/main/jniLibs/arm64-v8a/libdsh.so ./cmd/dsh-server
+            x64_cc="$NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/x86_64-linux-android26-clang"
+            CGO_ENABLED=1 GOOS=android GOARCH=amd64 CC="$x64_cc" go build -trimpath -buildvcs=true \
+              -ldflags="$common -X main.buildABI=x86_64 -linkmode=external -extldflags=-Wl,-z,max-page-size=65536" \
+              -o ../dsh-app/app/android/app/src/main/jniLibs/x86_64/libdsh.so ./cmd/dsh-server
+          )
+          cp dsh-app/app/android/app/src/main/jniLibs/arm64-v8a/libdsh.so dsh-app/build/native-provenance/libdsh-arm64-v8a.so
+          cp dsh-app/app/android/app/src/main/jniLibs/x86_64/libdsh.so dsh-app/build/native-provenance/libdsh-x86_64.so
+
+      - name: Verify native ELF and source metadata
+        working-directory: dsh-app
+        shell: bash
+        env:
+          ENGINE_REVISION: ${{ steps.engine.outputs.revision }}
+        run: |
+          set -euo pipefail
+          arm=app/android/app/src/main/jniLibs/arm64-v8a/libdsh.so
+          x64=app/android/app/src/main/jniLibs/x86_64/libdsh.so
+          file "$arm" | grep -q 'ARM aarch64'
+          file "$x64" | grep -Eq 'x86-64|x86_64'
+          for binary in "$arm" "$x64"; do
+            readelf -lW "$binary" | grep -q '/system/bin/linker64'
+            alignments=$(readelf -lW "$binary" | awk '$1 == "LOAD" {print $NF}' | sort -u)
+            test "$alignments" = '0x10000'
+            go version -m "$binary" | tee -a build/native-provenance/go-version-m.txt
+            go version -m "$binary" | grep -q "$ENGINE_REVISION"
+            if go version -m "$binary" | grep -q 'vcs.modified.*true'; then
+              echo 'dirty engine binary rejected' >&2
+              exit 1
+            fi
+          done
+
+      - name: Resolve Flutter dependencies
+        working-directory: dsh-app/app
+        run: flutter pub get
+
+      - name: Test on-demand ML Kit pairing initialization
+        working-directory: dsh-app/app
+        run: flutter test test/remote/pairing_scanner_test.dart --reporter expanded
+
+      - name: Build unsigned ARM64 and x86_64 APKs
+        working-directory: dsh-app
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p build/unsigned build/native-provenance
+          manifest=app/android/app/src/main/assets/runtime/manifest.json
+
+          python3 tooling/native_engine_manifest.py --lock native-engine.lock.json \
+            --binary app/android/app/src/main/jniLibs/arm64-v8a/libdsh.so --abi arm64-v8a --output "$manifest"
+          cp "$manifest" build/native-provenance/manifest-arm64-v8a.json
+          (cd app && flutter build apk --release --flavor arm64)
+          arm_apk=$(find app/build/app/outputs/flutter-apk -maxdepth 1 -type f -name '*arm64*release*.apk' | head -n 1)
+          test -n "$arm_apk"
+          cp "$arm_apk" build/unsigned/DSH-Native-arm64-v8a-unsigned.apk
+
+          python3 tooling/native_engine_manifest.py --lock native-engine.lock.json \
+            --binary app/android/app/src/main/jniLibs/x86_64/libdsh.so --abi x86_64 --output "$manifest"
+          cp "$manifest" build/native-provenance/manifest-x86_64.json
+          (cd app && flutter build apk --release --flavor x64)
+          x64_apk=$(find app/build/app/outputs/flutter-apk -maxdepth 1 -type f -name '*x64*release*.apk' | head -n 1)
+          test -n "$x64_apk"
+          cp "$x64_apk" build/unsigned/DSH-Native-x86_64-unsigned.apk
+
+      - name: Audit unsigned APK contents
+        working-directory: dsh-app
+        shell: bash
+        run: |
+          set -euo pipefail
+          forbidden='rootfs-|(^|/)node$|(^|/)npm$|(^|/)pnpm$|ubuntu|libproot\.so|libproot-loader\.so|libtalloc\.so|libandroid-shmem\.so'
+          for apk in build/unsigned/*.apk; do
+            listing=$(unzip -Z1 "$apk")
+            if printf '%s\n' "$listing" | grep -Eiq "$forbidden"; then
+              printf '%s\n' "$listing" | grep -Ei "$forbidden" >&2
+              exit 1
+            fi
+            printf '%s\n' "$listing" | grep -q 'lib/.*/libdsh.so'
+            printf '%s\n' "$listing" | grep -q 'assets/flutter_assets/assets/runtime/manifest.json\|assets/runtime/manifest.json'
+          done
+          (cd build/native-provenance && sha256sum ./* > SHA256SUMS)
+          (cd build/unsigned && sha256sum ./* > SHA256SUMS)
+
+      - name: Upload unsigned build handoff
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: dsh-native-unsigned-${{ github.run_id }}
+          path: dsh-app/build/unsigned
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Upload engine provenance
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: dsh-native-provenance-${{ github.run_id }}
+          path: dsh-app/build/native-provenance
+          if-no-files-found: error
+          retention-days: 30
+
+  sign:
+    name: Sign verified APKs
+    needs: build-unsigned
+    if: github.event_name == 'workflow_dispatch' || github.event_name == 'push'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    environment: release
+    steps:
+      - name: Setup Java 17
+        uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Download tested unsigned APKs
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: dsh-native-unsigned-${{ github.run_id }}
+          path: unsigned
+
+      - name: Sign and verify release APKs
+        shell: bash
         env:
           KEYSTORE_B64: ${{ secrets.DSH_ANDROID_KEYSTORE_B64 }}
           STORE_PASSWORD: ${{ secrets.DSH_ANDROID_STORE_PASSWORD }}
@@ -27,79 +285,43 @@ jobs:
           test -n "$STORE_PASSWORD"
           test -n "$KEY_PASSWORD"
           test -n "$KEY_ALIAS"
-          keystore="$GITHUB_WORKSPACE/dsh-app/app/android/dsh-release.p12"
+          apksigner=$(find "$ANDROID_SDK_ROOT/build-tools" -type f -name apksigner | sort -V | tail -n 1)
+          zipalign=$(find "$ANDROID_SDK_ROOT/build-tools" -type f -name zipalign | sort -V | tail -n 1)
+          test -x "$apksigner"
+          test -x "$zipalign"
+          keystore="$RUNNER_TEMP/dsh-release.p12"
+          aligned="$RUNNER_TEMP/aligned.apk"
+          cleanup() { rm -f "$keystore" "$aligned"; }
+          trap cleanup EXIT
           printf '%s' "$KEYSTORE_B64" | base64 --decode > "$keystore"
           chmod 600 "$keystore"
-          cat > dsh-app/app/android/key.properties <<EOF
-          storeFile=$keystore
-          storePassword=$STORE_PASSWORD
-          keyAlias=$KEY_ALIAS
-          keyPassword=$KEY_PASSWORD
-          EOF
+          actual=$(keytool -list -v -storetype PKCS12 -keystore "$keystore" -storepass:env STORE_PASSWORD -alias "$KEY_ALIAS" \
+            | sed -nE 's/^[[:space:]]*SHA256:[[:space:]]*//p' | tr -d ':' | tr '[:upper:]' '[:lower:]' | head -n 1)
+          test "$actual" = "$EXPECTED_SIGNER_SHA256"
 
-      - name: Setup Java 17
-        uses: actions/setup-java@v5
-        with:
-          distribution: 'temurin'
-          java-version: '17'
-
-      - name: Setup Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: '1.25.x'
-          cache-dependency-path: dsh-go-rewrite/go.sum
-
-      - name: Setup Flutter
-        uses: subosito/flutter-action@v2
-        with:
-          flutter-version: '3.47.7'
-
-      - name: Test Go Engine
-        working-directory: dsh-go-rewrite
-        run: go test ./...
-
-      - name: Test Dart Client Against Go Engine
-        shell: bash
-        run: |
-          set -euo pipefail
-          host="$RUNNER_TEMP/dsh-server"
-          home="$RUNNER_TEMP/dsh-native-contract-home"
-          log="$RUNNER_TEMP/dsh-native-contract.log"
-          (cd dsh-go-rewrite && go build -o "$host" ./cmd/dsh-server)
-          mkdir -p "$home"
-          "$host" --port 39080 --home "$home" >"$log" 2>&1 &
-          pid=$!
-          trap 'kill "$pid" 2>/dev/null || true; wait "$pid" 2>/dev/null || true' EXIT
-          for _ in $(seq 1 100); do
-            launch_url=$(sed -nE 's/^dsh web: (http.*)$/\1/p' "$log" | tail -n 1)
-            if [ -n "$launch_url" ]; then break; fi
-            if ! kill -0 "$pid" 2>/dev/null; then cat "$log"; exit 1; fi
-            sleep 0.1
+          mkdir -p signed
+          for input in unsigned/*-unsigned.apk; do
+            name=$(basename "$input" -unsigned.apk)
+            output="signed/${name}.apk"
+            "$zipalign" -f -p 4 "$input" "$aligned"
+            "$apksigner" sign --ks "$keystore" --ks-type PKCS12 --ks-key-alias "$KEY_ALIAS" \
+              --ks-pass env:STORE_PASSWORD --key-pass env:KEY_PASSWORD \
+              --v1-signing-enabled true --v2-signing-enabled true --v3-signing-enabled true \
+              --out "$output" "$aligned"
+            "$apksigner" verify --verbose --print-certs "$output" | tee "$RUNNER_TEMP/cert.txt"
+            signed_digest=$(sed -nE 's/^Signer #1 certificate SHA-256 digest:[[:space:]]*//p' "$RUNNER_TEMP/cert.txt" \
+              | tr -d ':' | tr '[:upper:]' '[:lower:]' | head -n 1)
+            test "$signed_digest" = "$EXPECTED_SIGNER_SHA256"
+            rm -f "$aligned"
           done
-          test -n "${launch_url:-}" || { cat "$log"; exit 1; }
-          (cd dsh-app/packages/dsh_client && PUB_HOSTED_URL=https://pub.flutter-io.cn dart pub get --enforce-lockfile)
-          (cd dsh-app/packages/dsh_client && PUB_HOSTED_URL=https://pub.flutter-io.cn DSH_NATIVE_GO_LIVE_URL="$launch_url" dart test test/native_go_contract_test.dart --reporter expanded)
+          (cd signed && sha256sum ./*.apk > SHA256SUMS)
+          cleanup
+          trap - EXIT
 
-      - name: Compile Native Go Engine for Android ARM64
-        run: |
-          mkdir -p dsh-app/app/android/app/src/main/jniLibs/arm64-v8a
-          cd dsh-go-rewrite
-          CGO_ENABLED=0 GOOS=android GOARCH=arm64 go build -ldflags="-s -w" -o ../dsh-app/app/android/app/src/main/jniLibs/arm64-v8a/libdsh.so ./cmd/dsh-server
-
-      - name: Verify Android Native Engine
-        run: |
-          file dsh-app/app/android/app/src/main/jniLibs/arm64-v8a/libdsh.so | grep -q 'ARM aarch64'
-          readelf -lW dsh-app/app/android/app/src/main/jniLibs/arm64-v8a/libdsh.so | grep -q '/system/bin/linker64'
-          test "$(readelf -lW dsh-app/app/android/app/src/main/jniLibs/arm64-v8a/libdsh.so | awk '$1 == "LOAD" {print $NF}' | sort -u)" = '0x10000'
-
-      - name: Build Flutter Release APK
-        run: |
-          cd dsh-app/app
-          flutter pub get
-          flutter build apk --release --flavor arm64
-
-      - name: Upload APK to Artifacts / Releases
-        uses: actions/upload-artifact@v4
+      - name: Upload release-signed APKs
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
-          name: dsh-native-release.apk
-          path: dsh-app/app/build/app/outputs/flutter-apk/*.apk
+          name: dsh-native-release-${{ github.run_id }}
+          path: signed
+          if-no-files-found: error
+          retention-days: 30

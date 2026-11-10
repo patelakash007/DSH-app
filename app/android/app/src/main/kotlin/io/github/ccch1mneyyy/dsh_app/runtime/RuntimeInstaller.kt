@@ -63,9 +63,10 @@ class RuntimeInstaller(
     fun install(dropKept: Boolean = false, onProgress: (Long, Long) -> Unit) {
         val nativeBinary = File(context.applicationInfo.nativeLibraryDir, "libdsh.so")
         if (nativeBinary.exists()) {
-            baseDir.mkdirs()
-            rootfs.mkdirs()
-            versionFile.writeText(manifest.runtimeVersion)
+            manifest.engine?.verify(nativeBinary)
+            val paths = NativeRuntimePaths.of(context).prepare()
+            paths.versionFile.parentFile?.mkdirs()
+            paths.versionFile.writeText(manifest.runtimeVersion)
             onProgress(100, 100)
             return
         }

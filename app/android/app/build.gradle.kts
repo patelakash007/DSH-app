@@ -122,8 +122,13 @@ android {
             if (hasWholeReleaseKey) signingConfig = signingConfigs.getByName("release")
         }
         release {
-            // Use the release key when configured; local builds without key.properties fall back to debug.
-            signingConfig = signingConfigs.getByName(if (keyProps.isEmpty) "debug" else "release")
+            // Never sign a release with the debug key implicitly: an unsigned artifact cannot be
+            // installed or published by accident. Local release testing may opt in explicitly.
+            signingConfig = when {
+                hasWholeReleaseKey -> signingConfigs.getByName("release")
+                providers.gradleProperty("dsh.allowDebugSigning").orNull == "true" -> signingConfigs.getByName("debug")
+                else -> null
+            }
             // Ours on top of Flutter's: phone control's privileged process and
             // its TLS libraries are reached by class name (see the file).
             proguardFiles("proguard-rules.pro")

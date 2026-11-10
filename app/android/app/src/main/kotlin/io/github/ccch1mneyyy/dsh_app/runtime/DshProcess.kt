@@ -83,22 +83,26 @@ class DshProcess(
 
         val nativeBinary = File(context.applicationInfo.nativeLibraryDir, "libdsh.so")
         if (nativeBinary.exists()) {
+            manifest.engine?.verify(nativeBinary)
             direct = true
             directFallbackReason = null
             launchDiagnostics.selected(true, null)
             port = pickPort()
-            val dshHome = File(context.filesDir, "dsh_home").apply { mkdirs() }
+            val paths = NativeRuntimePaths.of(context).prepare()
             val builder = ProcessBuilder(
                 nativeBinary.absolutePath,
                 "--port", port.toString(),
-                "--home", dshHome.absolutePath
-            ).directory(dshHome)
+                "--home", paths.home.absolutePath,
+                "--workspace", paths.workspaceRoot.absolutePath,
+            ).directory(paths.workspaceRoot)
             val env = builder.environment()
             env.clear()
             env["PATH"] = "/system/bin:/system/xbin"
-            env["HOME"] = dshHome.absolutePath
-            env["DSH_HOME"] = dshHome.absolutePath
-            env["TMPDIR"] = context.cacheDir.absolutePath
+            env["HOME"] = paths.home.absolutePath
+            env["DSH_HOME"] = paths.home.absolutePath
+            env["AGENTS_HOME"] = paths.agentsHome.absolutePath
+            env["DSH_WORKSPACE_ROOT"] = paths.workspaceRoot.absolutePath
+            env["TMPDIR"] = paths.tempRoot.absolutePath
             guestEnv.forEach { (k, v) -> env[k] = v }
             readyReported = false
             listener.onLog("[dsh-app] launching native Go engine: ${builder.command().joinToString(" ")}", "system")

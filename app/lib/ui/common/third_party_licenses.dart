@@ -14,6 +14,7 @@ void registerThirdPartyLicenses() {
       // Code copied or adapted into the source.
       LicenseEntryWithLineBreaks(<String>['PiPilot'], _pipilotMit),
       LicenseEntryWithLineBreaks(<String>['DeepSeek Harness'], _dshMit),
+      LicenseEntryWithLineBreaks(<String>['JopenChen dsh-go (modified native engine)'], _jopenDshGoMit),
       LicenseEntryWithLineBreaks(<String>['Phase'], _phaseNotice),
       LicenseEntryWithLineBreaks(<String>['DS Bot'], _dsBotNotice + _apache2),
       LicenseEntryWithLineBreaks(<String>['ds-harness-remote'], _dshRemoteMit),
@@ -84,6 +85,19 @@ const _dshMit = '''
 MIT License
 
 Copyright (c) 2026 DeepSeek
+
+$_mitTerms''';
+
+/// The Go engine is built from the modified fork pinned in native-engine.lock.json.
+/// Upstream portions retain JopenChen's MIT notice; fork changes are AGPL-3.0.
+const _jopenDshGoMit = '''
+MIT License
+
+Copyright (c) 2026 JopenChen
+
+Upstream: https://github.com/JopenChen/dsh-go
+Modified source: https://github.com/patelakash007/DSH-go-rewrite
+The exact source revision and binary SHA-256 are embedded in the APK runtime manifest.
 
 $_mitTerms''';
 

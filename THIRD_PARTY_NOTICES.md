@@ -88,6 +88,19 @@ Files located under `app/lib/ui/`:
 | `packages/dsh_client/lib/src/binary_response.dart` | `@deepseek-ai/dsh-client-connection` | Binary response decoding |
 | `packages/dsh_client/lib/src/deliverables.dart` | `@deepseek-ai/dsh-client-ui-deliverables` | Deliverable validation and turn selection |
 
+### JopenChen dsh-go (MIT License, Modified)
+
+| Item | Details |
+|---|---|
+| Project | dsh-go, https://github.com/JopenChen/dsh-go |
+| Upstream revision | `c1023d186802c2fc0df87eb57c1ff98bde238728` |
+| Copyright | Copyright (c) 2026 JopenChen |
+| Upstream license | MIT License |
+| Modified source | https://github.com/patelakash007/DSH-go-rewrite; the exact release revision is pinned in `native-engine.lock.json` and embedded in the APK runtime manifest |
+| Purpose | Android-native DSH agent, session, persistence, provider, tool, and protocol engine packaged as `libdsh.so` |
+
+The distributed engine is substantially modified and the fork as a whole is offered under GNU AGPL-3.0. The original MIT notice and permission terms remain applicable to the incorporated upstream portions and are reproduced below.
+
 ### DS Bot (Apache License 2.0, Modified)
 
 | Item | Details |
@@ -144,6 +157,7 @@ MIT License
 
 Copyright (c) 2026 CikeSeven
 Copyright (c) 2026 DeepSeek
+Copyright (c) 2026 JopenChen
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
