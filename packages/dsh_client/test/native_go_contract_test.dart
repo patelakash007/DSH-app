@@ -291,6 +291,15 @@ void main() {
       expect((commands! as List).whereType<Map>().map((command) => command['name']), contains('permission'));
     });
 
+    test('native queue errors and default model initialization', () async {
+      final sessionId = (await client.createSession()).sessionId;
+      await expectLater(
+        client.updateQueue(sessionId, 'missing-queue-item', remove: true),
+        throwsA(isA<DshRemoteException>().having((e) => e.code, 'code', 'session/queue-item-not-found')),
+      );
+      await client.rpc.call('session/initializeDefaultModel');
+    });
+
     test('native schedule catalogue and missing-task errors', () async {
       expect(await client.scheduleCatalog(), isEmpty);
       const missing = ScheduleTask(

@@ -4,8 +4,8 @@
   "counts": {
     "rpc": {
       "total": 111,
-      "implemented": 57,
-      "in-progress": 50,
+      "implemented": 59,
+      "in-progress": 48,
       "placeholder": 4
     },
     "mux": {
@@ -705,9 +705,9 @@
     },
     {
       "endpoint": "session/initializeDefaultModel",
-      "status": "in-progress",
+      "status": "implemented",
       "owner": "native-engine",
-      "test": null,
+      "test": "packages/dsh_client/test/native_go_contract_test.dart",
       "clientReferences": [
         "app/lib/state/account_api.dart"
       ],
@@ -795,9 +795,9 @@
     },
     {
       "endpoint": "session/updateQueue",
-      "status": "in-progress",
+      "status": "implemented",
       "owner": "native-engine",
-      "test": null,
+      "test": "packages/dsh_client/test/native_go_contract_test.dart",
       "clientReferences": [
         "packages/dsh_client/lib/src/session_api.dart"
       ],
