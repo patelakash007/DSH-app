@@ -7,7 +7,20 @@
     "pluginManager/listBundles": "placeholder",
     "pluginManager/listPlugins": "placeholder",
     "settings/describe": "placeholder",
-    "skills/list": "placeholder"
+    "skills/list": "placeholder",
+    "terminal/close": "in-progress",
+    "terminal/create": "in-progress",
+    "terminal/environment": "in-progress",
+    "terminal/list": "in-progress",
+    "terminal/rename": "in-progress",
+    "terminal/resize": "in-progress",
+    "terminal/shells": "in-progress",
+    "terminal/write": "in-progress"
+  },
+  "mux": {
+    "terminal/attach": "in-progress",
+    "terminal/follow": "in-progress",
+    "terminal/retain": "in-progress"
   },
   "notes": {
     "agentPresets/list": "Native preset composition is not implemented yet.",
@@ -17,6 +30,17 @@
     "pluginManager/listBundles": "Native plugin bundles are not implemented.",
     "pluginManager/listPlugins": "Native plugin lifecycle is not implemented.",
     "settings/describe": "Native schema-driven settings are not implemented.",
-    "skills/list": "Native skill discovery is not implemented."
+    "skills/list": "Native skill discovery is not implemented.",
+    "terminal/attach": "Native shell streaming works; true PTY allocation and kernel resize are still pending.",
+    "terminal/close": "Native shell lifecycle works; true PTY process semantics are still pending.",
+    "terminal/create": "Native shell lifecycle works; true PTY process semantics are still pending.",
+    "terminal/environment": "Native shell limits are implemented; true PTY geometry is still pending.",
+    "terminal/follow": "Native shell streaming works; true PTY allocation and kernel resize are still pending.",
+    "terminal/list": "Native shell lifecycle works; true PTY process semantics are still pending.",
+    "terminal/rename": "Native shell lifecycle works; true PTY process semantics are still pending.",
+    "terminal/resize": "Geometry metadata is updated, but there is no kernel PTY resize yet.",
+    "terminal/retain": "Native terminal retention works; true PTY allocation is still pending.",
+    "terminal/shells": "The Android system shell is exposed; bundled Bash is not provided.",
+    "terminal/write": "Native shell input works; true PTY line discipline is still pending."
   }
 }

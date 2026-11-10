@@ -5,6 +5,7 @@
 library;
 
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:dsh_client/dsh_client.dart';
@@ -106,6 +107,103 @@ void main() {
         client.statFile(sessionId, '../outside'),
         throwsA(isA<DshRemoteException>().having((e) => e.code, 'code', 'workspace-file/not-allowed')),
       );
+    });
+
+    test('streaming upload is durable and readable by attachment id', () async {
+      final sessionId = (await client.createSession()).sessionId;
+      final receipt = await client.uploadFile(sessionId, utf8.encode('native attachment'), name: 'native.txt');
+      expect(receipt.receiptId, isNotEmpty);
+      expect(receipt.attachment.name, 'native.txt');
+      expect(receipt.attachment.bytes, utf8.encode('native attachment').length);
+      final attachmentId = receipt.attachment.attachmentId;
+      expect(attachmentId, isNotEmpty);
+
+      final value = await client.rpc.call('session/attachment', {
+        'request': {'sessionId': sessionId, 'attachmentId': attachmentId},
+      }) as Map;
+      expect(utf8.decode(base64Decode(value['data']! as String)), 'native attachment');
+    });
+
+    test('goal lifecycle and live session-control projection', () async {
+      final sessionId = (await client.createSession()).sessionId;
+      final baseline = Completer<SessionControlBaseline>();
+      final goalProjection = Completer<SessionControlProjection>();
+      final control = client.watchSessionControl().listen((update) {
+        if (update is SessionControlBaseline && !baseline.isCompleted) baseline.complete(update);
+        if (update is SessionControlProjection && update.sessionId == sessionId && update.key == 'goal') {
+          final value = update.value;
+          if (value is Map && value['goal'] is Map && !goalProjection.isCompleted) goalProjection.complete(update);
+        }
+      });
+      addTearDown(control.cancel);
+      expect((await baseline.future.timeout(const Duration(seconds: 10))).projections, contains(sessionId));
+
+      var ref = await client.createGoal(sessionId, 'Finish native DSH', maxGoalRounds: 6);
+      expect(ref.id, isNotEmpty);
+      final current = await client.goal(sessionId);
+      expect(current?.goal.objective, 'Finish native DSH');
+      expect(current?.activation, GoalActivation.armed);
+      await goalProjection.future.timeout(const Duration(seconds: 10));
+
+      final edited = await client.editGoal(sessionId, ref, objective: 'Finish standalone native DSH');
+      ref = edited.ref;
+      expect(edited.goal.objective, 'Finish standalone native DSH');
+      final paused = await client.pauseGoal(sessionId, ref);
+      ref = paused.ref;
+      expect(paused.goal.phase, GoalPhase.paused);
+      final resumed = await client.resumeGoal(sessionId, ref);
+      ref = resumed.ref;
+      expect(resumed.activation, GoalActivation.armed);
+      await client.clearGoal(sessionId, ref);
+      expect(await client.goal(sessionId), isNull);
+    });
+
+    test('native terminal attach, input, output, rename, resize, and close', () async {
+      final sessionId = (await client.createSession()).sessionId;
+      final environment = await client.terminalEnvironment(sessionId);
+      expect(environment.cwd, isNotEmpty);
+      final shells = await client.terminalShells(sessionId);
+      expect(shells, isNotEmpty);
+      final id = newTerminalId();
+      final created = await client.createTerminal(sessionId, id: id, cols: 80, rows: 24);
+      expect(created.running, isTrue);
+
+      final attachment = client.attachTerminal(sessionId, id, environment: environment);
+      final snapshot = Completer<TerminalSnapshot>();
+      final output = Completer<TerminalOutput>();
+      final frames = attachment.frames.listen((frame) {
+        if (frame is TerminalSnapshot && !snapshot.isCompleted) snapshot.complete(frame);
+        if (frame is TerminalOutput && frame.data.contains('DART_NATIVE_TERMINAL') && !output.isCompleted) {
+          output.complete(frame);
+        }
+      });
+      addTearDown(frames.cancel);
+      addTearDown(attachment.close);
+      expect((await snapshot.future.timeout(const Duration(seconds: 10))).writable, isTrue);
+      expect(attachment.write('echo DART_NATIVE_TERMINAL\n'), isTrue);
+      expect((await output.future.timeout(const Duration(seconds: 10))).data, contains('DART_NATIVE_TERMINAL'));
+      expect(attachment.resize(100, 30), isTrue);
+      await client.renameTerminal(sessionId, id, 'Native shell');
+      expect((await client.listTerminals(sessionId)).single.title, 'Native shell');
+      await client.closeTerminal(sessionId, id);
+    });
+
+    test('session fork persists a closed history prefix', () async {
+      final sourceId = (await client.createSession()).sessionId;
+      final ended = Completer<TurnEndedEvent>();
+      final watch = client.watch(sourceId).listen((event) {
+        if (event is TurnEndedEvent && !ended.isCompleted) ended.complete(event);
+      });
+      addTearDown(watch.cancel);
+      await client.prompt(sourceId, 'fork this native session');
+      await ended.future.timeout(const Duration(seconds: 10));
+      final childId = await client.forkSession(sourceId);
+      expect(childId, isNotEmpty);
+      expect(childId, isNot(sourceId));
+      final child = await client.projections(childId);
+      expect(child, isNotNull);
+      final history = await client.history(childId, throughSeq: child!.asOfSeq);
+      expect(history.events.map((event) => event.type), contains('session/end-seed'));
     });
 
     test('workspace baseline and archive updates', () async {

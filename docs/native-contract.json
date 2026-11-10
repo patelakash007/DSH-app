@@ -4,19 +4,19 @@
   "counts": {
     "rpc": {
       "total": 111,
-      "implemented": 23,
-      "in-progress": 80,
+      "implemented": 33,
+      "in-progress": 70,
       "placeholder": 8
     },
     "mux": {
       "total": 10,
-      "implemented": 4,
-      "in-progress": 6
+      "implemented": 5,
+      "in-progress": 5
     },
     "http": {
       "total": 6,
-      "in-progress": 4,
-      "implemented": 2
+      "in-progress": 3,
+      "implemented": 3
     }
   },
   "rpc": [
@@ -324,9 +324,9 @@
     },
     {
       "endpoint": "fileUploads/upload",
-      "status": "in-progress",
+      "status": "implemented",
       "owner": "native-engine",
-      "test": null,
+      "test": "packages/dsh_client/test/native_go_contract_test.dart",
       "clientReferences": [
         "packages/dsh_client/lib/src/session_api.dart"
       ],
@@ -334,9 +334,9 @@
     },
     {
       "endpoint": "goals/clear",
-      "status": "in-progress",
+      "status": "implemented",
       "owner": "native-engine",
-      "test": null,
+      "test": "packages/dsh_client/test/native_go_contract_test.dart",
       "clientReferences": [
         "packages/dsh_client/lib/src/goals_api.dart"
       ],
@@ -344,9 +344,9 @@
     },
     {
       "endpoint": "goals/complete",
-      "status": "in-progress",
+      "status": "implemented",
       "owner": "native-engine",
-      "test": null,
+      "test": "packages/dsh_client/test/native_go_contract_test.dart",
       "clientReferences": [
         "packages/dsh_client/lib/src/goals_api.dart"
       ],
@@ -354,9 +354,9 @@
     },
     {
       "endpoint": "goals/create",
-      "status": "in-progress",
+      "status": "implemented",
       "owner": "native-engine",
-      "test": null,
+      "test": "packages/dsh_client/test/native_go_contract_test.dart",
       "clientReferences": [
         "packages/dsh_client/lib/src/goals_api.dart"
       ],
@@ -364,9 +364,9 @@
     },
     {
       "endpoint": "goals/edit",
-      "status": "in-progress",
+      "status": "implemented",
       "owner": "native-engine",
-      "test": null,
+      "test": "packages/dsh_client/test/native_go_contract_test.dart",
       "clientReferences": [
         "packages/dsh_client/lib/src/goals_api.dart"
       ],
@@ -374,9 +374,9 @@
     },
     {
       "endpoint": "goals/get",
-      "status": "in-progress",
+      "status": "implemented",
       "owner": "native-engine",
-      "test": null,
+      "test": "packages/dsh_client/test/native_go_contract_test.dart",
       "clientReferences": [
         "packages/dsh_client/lib/src/goals_api.dart"
       ],
@@ -384,9 +384,9 @@
     },
     {
       "endpoint": "goals/pause",
-      "status": "in-progress",
+      "status": "implemented",
       "owner": "native-engine",
-      "test": null,
+      "test": "packages/dsh_client/test/native_go_contract_test.dart",
       "clientReferences": [
         "packages/dsh_client/lib/src/goals_api.dart"
       ],
@@ -394,9 +394,9 @@
     },
     {
       "endpoint": "goals/resume",
-      "status": "in-progress",
+      "status": "implemented",
       "owner": "native-engine",
-      "test": null,
+      "test": "packages/dsh_client/test/native_go_contract_test.dart",
       "clientReferences": [
         "packages/dsh_client/lib/src/goals_api.dart"
       ],
@@ -665,9 +665,9 @@
     },
     {
       "endpoint": "session/attachment",
-      "status": "in-progress",
+      "status": "implemented",
       "owner": "native-engine",
-      "test": null,
+      "test": "packages/dsh_client/test/native_go_contract_test.dart",
       "clientReferences": [
         "packages/dsh_client/lib/src/session_api.dart"
       ],
@@ -695,9 +695,9 @@
     },
     {
       "endpoint": "session/fork",
-      "status": "in-progress",
+      "status": "implemented",
       "owner": "native-engine",
-      "test": null,
+      "test": "packages/dsh_client/test/native_go_contract_test.dart",
       "clientReferences": [
         "packages/dsh_client/lib/src/session_api.dart"
       ],
@@ -934,7 +934,7 @@
       "clientReferences": [
         "packages/dsh_client/lib/src/terminal_api.dart"
       ],
-      "note": null
+      "note": "Native shell lifecycle works; true PTY process semantics are still pending."
     },
     {
       "endpoint": "terminal/create",
@@ -944,7 +944,7 @@
       "clientReferences": [
         "packages/dsh_client/lib/src/terminal_api.dart"
       ],
-      "note": null
+      "note": "Native shell lifecycle works; true PTY process semantics are still pending."
     },
     {
       "endpoint": "terminal/environment",
@@ -954,7 +954,7 @@
       "clientReferences": [
         "packages/dsh_client/lib/src/terminal_api.dart"
       ],
-      "note": null
+      "note": "Native shell limits are implemented; true PTY geometry is still pending."
     },
     {
       "endpoint": "terminal/list",
@@ -964,7 +964,7 @@
       "clientReferences": [
         "packages/dsh_client/lib/src/terminal_api.dart"
       ],
-      "note": null
+      "note": "Native shell lifecycle works; true PTY process semantics are still pending."
     },
     {
       "endpoint": "terminal/rename",
@@ -974,7 +974,7 @@
       "clientReferences": [
         "packages/dsh_client/lib/src/terminal_api.dart"
       ],
-      "note": null
+      "note": "Native shell lifecycle works; true PTY process semantics are still pending."
     },
     {
       "endpoint": "terminal/resize",
@@ -984,7 +984,7 @@
       "clientReferences": [
         "packages/dsh_client/lib/src/terminal_api.dart"
       ],
-      "note": null
+      "note": "Geometry metadata is updated, but there is no kernel PTY resize yet."
     },
     {
       "endpoint": "terminal/shells",
@@ -994,7 +994,7 @@
       "clientReferences": [
         "packages/dsh_client/lib/src/terminal_api.dart"
       ],
-      "note": null
+      "note": "The Android system shell is exposed; bundled Bash is not provided."
     },
     {
       "endpoint": "terminal/write",
@@ -1004,7 +1004,7 @@
       "clientReferences": [
         "packages/dsh_client/lib/src/terminal_api.dart"
       ],
-      "note": null
+      "note": "Native shell input works; true PTY line discipline is still pending."
     },
     {
       "endpoint": "userQuestions/answer",
@@ -1161,9 +1161,9 @@
     },
     {
       "endpoint": "session/control",
-      "status": "in-progress",
+      "status": "implemented",
       "owner": "native-engine",
-      "test": null,
+      "test": "packages/dsh_client/test/native_go_contract_test.dart",
       "clientReferences": [
         "packages/dsh_client/lib/src/session_api.dart"
       ],
@@ -1188,7 +1188,7 @@
       "clientReferences": [
         "packages/dsh_client/lib/src/terminal_api.dart"
       ],
-      "note": null
+      "note": "Native shell streaming works; true PTY allocation and kernel resize are still pending."
     },
     {
       "endpoint": "terminal/follow",
@@ -1198,7 +1198,7 @@
       "clientReferences": [
         "packages/dsh_client/lib/src/terminal_api.dart"
       ],
-      "note": null
+      "note": "Native shell streaming works; true PTY allocation and kernel resize are still pending."
     },
     {
       "endpoint": "terminal/retain",
@@ -1208,7 +1208,7 @@
       "clientReferences": [
         "packages/dsh_client/lib/src/terminal_api.dart"
       ],
-      "note": null
+      "note": "Native terminal retention works; true PTY allocation is still pending."
     },
     {
       "endpoint": "userQuestions/attachWait",
@@ -1294,9 +1294,9 @@
     },
     {
       "endpoint": "/api/session/uploadFileBinary",
-      "status": "in-progress",
+      "status": "implemented",
       "owner": "native-engine",
-      "test": null,
+      "test": "packages/dsh_client/test/native_go_contract_test.dart",
       "clientReferences": [
         "packages/dsh_client/lib/src/session_api.dart"
       ],

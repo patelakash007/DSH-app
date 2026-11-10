@@ -49,6 +49,11 @@ def main() -> None:
             "capabilities": [
                 "agent-tools-v1",
                 "approvals-v1",
+                "attachments-v1",
+                "goals-v1",
+                "session-control-v1",
+                "session-fork-v1",
+                "terminal-shell-v1",
                 "workspace-files-v1",
                 "workspace-watch-v1",
             ],
