@@ -304,7 +304,8 @@ void main() {
       final install = await client.rpc.call('pluginManager/installBundle', {
         'request': {'bundleId': 'missing-native-bundle'},
       }) as Map;
-      expect(install['code'], 'plugin-manager/unsupported');
+      expect(install['application'], 'failed');
+      expect((install['error'] as Map)['code'], 'operation-error');
     });
 
     test('native custom provider settings, discovery, and routing', () async {
