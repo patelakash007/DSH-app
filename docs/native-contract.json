@@ -4,13 +4,13 @@
   "counts": {
     "rpc": {
       "total": 111,
-      "implemented": 50,
-      "in-progress": 57,
+      "implemented": 51,
+      "in-progress": 56,
       "placeholder": 4
     },
     "mux": {
-      "total": 10,
-      "implemented": 5,
+      "total": 12,
+      "implemented": 7,
       "in-progress": 5
     },
     "http": {
@@ -404,9 +404,9 @@
     },
     {
       "endpoint": "job/kill",
-      "status": "in-progress",
+      "status": "implemented",
       "owner": "native-engine",
-      "test": null,
+      "test": "packages/dsh_client/test/native_go_contract_test.dart",
       "clientReferences": [
         "packages/dsh_client/lib/src/features_api.dart"
       ],
@@ -1156,6 +1156,26 @@
       "test": null,
       "clientReferences": [
         "app/lib/state/account_api.dart"
+      ],
+      "note": null
+    },
+    {
+      "endpoint": "job/follow",
+      "status": "implemented",
+      "owner": "native-engine",
+      "test": "packages/dsh_client/test/native_go_contract_test.dart",
+      "clientReferences": [
+        "packages/dsh_client/lib/src/features_api.dart"
+      ],
+      "note": null
+    },
+    {
+      "endpoint": "job/list",
+      "status": "implemented",
+      "owner": "native-engine",
+      "test": "packages/dsh_client/test/native_go_contract_test.dart",
+      "clientReferences": [
+        "packages/dsh_client/lib/src/features_api.dart"
       ],
       "note": null
     },

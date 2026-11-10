@@ -51,6 +51,7 @@ def main() -> None:
                 "approvals-v1",
                 "attachments-v1",
                 "goals-v1",
+                "background-jobs-v1",
                 "message-feedback-v1",
                 "reference-discovery-v1",
                 "session-control-v1",

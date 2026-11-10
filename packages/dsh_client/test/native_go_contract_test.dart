@@ -291,6 +291,16 @@ void main() {
       expect((commands! as List).whereType<Map>().map((command) => command['name']), contains('permission'));
     });
 
+    test('native background job stream and missing-job error', () async {
+      final sessionId = (await client.createSession()).sessionId;
+      final jobs = await client.watchJobs(sessionId).first.timeout(const Duration(seconds: 10));
+      expect(jobs, isEmpty);
+      await expectLater(
+        client.killJob(sessionId, 'missing-native-job'),
+        throwsA(isA<DshRemoteException>().having((e) => e.code, 'code', 'job/not-found')),
+      );
+    });
+
     test('native message feedback lifecycle', () async {
       final sessionId = (await client.createSession()).sessionId;
       final events = <DshEvent>[];
