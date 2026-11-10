@@ -291,6 +291,20 @@ void main() {
       expect((commands! as List).whereType<Map>().map((command) => command['name']), contains('permission'));
     });
 
+    test('native terminal PTY lifecycle', () async {
+      final sessionId = (await client.createSession()).sessionId;
+      final environment = await client.terminalEnvironment(sessionId);
+      expect(environment.cwd, isNotEmpty);
+      final shells = await client.terminalShells(sessionId);
+      expect(shells, isNotEmpty);
+      final terminal = await client.createTerminal(sessionId, id: 'native-pty', cols: 80, rows: 24);
+      expect(terminal.state, TerminalProcessState.running);
+      expect(await client.listTerminals(sessionId), hasLength(1));
+      await client.renameTerminal(sessionId, 'native-pty', 'Native PTY');
+      await client.closeTerminal(sessionId, 'native-pty');
+      expect(await client.listTerminals(sessionId), isEmpty);
+    });
+
     test('native settings describe and mutate', () async {
       final description = await client.describeSettings();
       expect(

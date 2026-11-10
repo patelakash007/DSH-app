@@ -60,6 +60,7 @@ def main() -> None:
                 "custom-providers-v1",
                 "prompt-queue-v1",
                 "schedules-v1",
+                "terminal-pty-v1",
                 "session-export-v1",
                 "subagents-v1",
                 "user-questions-v1",

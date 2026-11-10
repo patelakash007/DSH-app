@@ -4,18 +4,17 @@
   "counts": {
     "rpc": {
       "total": 111,
-      "implemented": 86,
-      "in-progress": 24,
+      "implemented": 94,
+      "in-progress": 16,
       "blocked": 1
     },
     "mux": {
       "total": 12,
-      "implemented": 9,
-      "in-progress": 3
+      "implemented": 12
     },
     "http": {
       "total": 6,
-      "in-progress": 2,
+      "blocked": 2,
       "implemented": 4
     }
   },
@@ -928,83 +927,83 @@
     },
     {
       "endpoint": "terminal/close",
-      "status": "in-progress",
+      "status": "implemented",
       "owner": "native-engine",
-      "test": null,
+      "test": "packages/dsh_client/test/native_go_contract_test.dart",
       "clientReferences": [
         "packages/dsh_client/lib/src/terminal_api.dart"
       ],
-      "note": "Native shell lifecycle works; true PTY process semantics are still pending."
+      "note": null
     },
     {
       "endpoint": "terminal/create",
-      "status": "in-progress",
+      "status": "implemented",
       "owner": "native-engine",
-      "test": null,
+      "test": "packages/dsh_client/test/native_go_contract_test.dart",
       "clientReferences": [
         "packages/dsh_client/lib/src/terminal_api.dart"
       ],
-      "note": "Native shell lifecycle works; true PTY process semantics are still pending."
+      "note": null
     },
     {
       "endpoint": "terminal/environment",
-      "status": "in-progress",
+      "status": "implemented",
       "owner": "native-engine",
-      "test": null,
+      "test": "packages/dsh_client/test/native_go_contract_test.dart",
       "clientReferences": [
         "packages/dsh_client/lib/src/terminal_api.dart"
       ],
-      "note": "Native shell limits are implemented; true PTY geometry is still pending."
+      "note": null
     },
     {
       "endpoint": "terminal/list",
-      "status": "in-progress",
+      "status": "implemented",
       "owner": "native-engine",
-      "test": null,
+      "test": "packages/dsh_client/test/native_go_contract_test.dart",
       "clientReferences": [
         "packages/dsh_client/lib/src/terminal_api.dart"
       ],
-      "note": "Native shell lifecycle works; true PTY process semantics are still pending."
+      "note": null
     },
     {
       "endpoint": "terminal/rename",
-      "status": "in-progress",
+      "status": "implemented",
       "owner": "native-engine",
-      "test": null,
+      "test": "packages/dsh_client/test/native_go_contract_test.dart",
       "clientReferences": [
         "packages/dsh_client/lib/src/terminal_api.dart"
       ],
-      "note": "Native shell lifecycle works; true PTY process semantics are still pending."
+      "note": null
     },
     {
       "endpoint": "terminal/resize",
-      "status": "in-progress",
+      "status": "implemented",
       "owner": "native-engine",
-      "test": null,
+      "test": "packages/dsh_client/test/native_go_contract_test.dart",
       "clientReferences": [
         "packages/dsh_client/lib/src/terminal_api.dart"
       ],
-      "note": "Geometry metadata is updated, but there is no kernel PTY resize yet."
+      "note": null
     },
     {
       "endpoint": "terminal/shells",
-      "status": "in-progress",
+      "status": "implemented",
       "owner": "native-engine",
-      "test": null,
+      "test": "packages/dsh_client/test/native_go_contract_test.dart",
       "clientReferences": [
         "packages/dsh_client/lib/src/terminal_api.dart"
       ],
-      "note": "The Android system shell is exposed; bundled Bash is not provided."
+      "note": null
     },
     {
       "endpoint": "terminal/write",
-      "status": "in-progress",
+      "status": "implemented",
       "owner": "native-engine",
-      "test": null,
+      "test": "packages/dsh_client/test/native_go_contract_test.dart",
       "clientReferences": [
         "packages/dsh_client/lib/src/terminal_api.dart"
       ],
-      "note": "Native shell input works; true PTY line discipline is still pending."
+      "note": null
     },
     {
       "endpoint": "userQuestions/answer",
@@ -1202,33 +1201,33 @@
     },
     {
       "endpoint": "terminal/attach",
-      "status": "in-progress",
+      "status": "implemented",
       "owner": "native-engine",
-      "test": null,
+      "test": "packages/dsh_client/test/native_go_contract_test.dart",
       "clientReferences": [
         "packages/dsh_client/lib/src/terminal_api.dart"
       ],
-      "note": "Native shell streaming works; true PTY allocation and kernel resize are still pending."
+      "note": null
     },
     {
       "endpoint": "terminal/follow",
-      "status": "in-progress",
+      "status": "implemented",
       "owner": "native-engine",
-      "test": null,
+      "test": "packages/dsh_client/test/native_go_contract_test.dart",
       "clientReferences": [
         "packages/dsh_client/lib/src/terminal_api.dart"
       ],
-      "note": "Native shell streaming works; true PTY allocation and kernel resize are still pending."
+      "note": null
     },
     {
       "endpoint": "terminal/retain",
-      "status": "in-progress",
+      "status": "implemented",
       "owner": "native-engine",
-      "test": null,
+      "test": "packages/dsh_client/test/native_go_contract_test.dart",
       "clientReferences": [
         "packages/dsh_client/lib/src/terminal_api.dart"
       ],
-      "note": "Native terminal retention works; true PTY allocation is still pending."
+      "note": null
     },
     {
       "endpoint": "userQuestions/attachWait",
@@ -1264,23 +1263,23 @@
   "http": [
     {
       "endpoint": "/api/bot",
-      "status": "in-progress",
+      "status": "blocked",
       "owner": "native-engine",
       "test": null,
       "clientReferences": [
         "packages/dsh_client/lib/src/dsbot_api.dart"
       ],
-      "note": null
+      "note": "DS Bot is a Node plugin with its own character, room and feed model. The native engine returns 404 so the app shows its install card instead of pretending the plugin exists."
     },
     {
       "endpoint": "/api/bot/feed",
-      "status": "in-progress",
+      "status": "blocked",
       "owner": "native-engine",
       "test": null,
       "clientReferences": [
         "packages/dsh_client/lib/src/dsbot_api.dart"
       ],
-      "note": null
+      "note": "DS Bot is a Node plugin with its own character, room and feed model. The native engine returns 404 so the app shows its install card instead of pretending the plugin exists."
     },
     {
       "endpoint": "/api/file",

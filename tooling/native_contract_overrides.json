@@ -1,13 +1,5 @@
 {
   "rpc": {
-    "terminal/close": "in-progress",
-    "terminal/create": "in-progress",
-    "terminal/environment": "in-progress",
-    "terminal/list": "in-progress",
-    "terminal/rename": "in-progress",
-    "terminal/resize": "in-progress",
-    "terminal/shells": "in-progress",
-    "terminal/write": "in-progress",
     "account/startSignIn": "in-progress",
     "appAuth/begin": "in-progress",
     "pluginManager/installBundle": "in-progress",
@@ -26,23 +18,8 @@
     "speech/cancelPreparation": "in-progress",
     "officeToPdf/render": "blocked"
   },
-  "mux": {
-    "terminal/attach": "in-progress",
-    "terminal/follow": "in-progress",
-    "terminal/retain": "in-progress"
-  },
+  "mux": {},
   "notes": {
-    "terminal/attach": "Native shell streaming works; true PTY allocation and kernel resize are still pending.",
-    "terminal/close": "Native shell lifecycle works; true PTY process semantics are still pending.",
-    "terminal/create": "Native shell lifecycle works; true PTY process semantics are still pending.",
-    "terminal/environment": "Native shell limits are implemented; true PTY geometry is still pending.",
-    "terminal/follow": "Native shell streaming works; true PTY allocation and kernel resize are still pending.",
-    "terminal/list": "Native shell lifecycle works; true PTY process semantics are still pending.",
-    "terminal/rename": "Native shell lifecycle works; true PTY process semantics are still pending.",
-    "terminal/resize": "Geometry metadata is updated, but there is no kernel PTY resize yet.",
-    "terminal/retain": "Native terminal retention works; true PTY allocation is still pending.",
-    "terminal/shells": "The Android system shell is exposed; bundled Bash is not provided.",
-    "terminal/write": "Native shell input works; true PTY line discipline is still pending.",
     "account/startSignIn": "The native engine reports a truthful signed-out state; DeepSeek PKCE sign-in is not wired yet.",
     "appAuth/begin": "Subscription sign-in is reported as unavailable instead of pretending to start.",
     "pluginManager/installBundle": "The standalone engine does not run Node plugin packages; installation is explicitly unsupported.",
@@ -59,6 +36,12 @@
     "speech/prepare": "Speech recognition is owned by the Android voice plugin; the Go engine does not expose it yet.",
     "speech/transcribe": "Speech recognition is owned by the Android voice plugin; the Go engine does not expose it yet.",
     "speech/cancelPreparation": "Speech recognition is owned by the Android voice plugin; the Go engine does not expose it yet.",
-    "officeToPdf/render": "Office-to-PDF conversion requires LibreOffice, which is not bundled in the standalone native engine."
+    "officeToPdf/render": "Office-to-PDF conversion requires LibreOffice, which is not bundled in the standalone native engine.",
+    "/api/bot": "DS Bot is a Node plugin with its own character, room and feed model. The native engine returns 404 so the app shows its install card instead of pretending the plugin exists.",
+    "/api/bot/feed": "DS Bot is a Node plugin with its own character, room and feed model. The native engine returns 404 so the app shows its install card instead of pretending the plugin exists."
+  },
+  "http": {
+    "/api/bot": "blocked",
+    "/api/bot/feed": "blocked"
   }
 }
