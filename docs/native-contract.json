@@ -4,14 +4,14 @@
   "counts": {
     "rpc": {
       "total": 111,
-      "implemented": 61,
-      "in-progress": 47,
-      "placeholder": 3
+      "implemented": 77,
+      "in-progress": 33,
+      "blocked": 1
     },
     "mux": {
       "total": 12,
-      "implemented": 7,
-      "in-progress": 5
+      "implemented": 8,
+      "in-progress": 4
     },
     "http": {
       "total": 6,
@@ -33,9 +33,9 @@
     },
     {
       "endpoint": "account/cancelSignIn",
-      "status": "in-progress",
+      "status": "implemented",
       "owner": "native-engine",
-      "test": null,
+      "test": "packages/dsh_client/test/native_go_contract_test.dart",
       "clientReferences": [
         "app/lib/state/account_api.dart"
       ],
@@ -43,9 +43,9 @@
     },
     {
       "endpoint": "account/getBalance",
-      "status": "in-progress",
+      "status": "implemented",
       "owner": "native-engine",
-      "test": null,
+      "test": "packages/dsh_client/test/native_go_contract_test.dart",
       "clientReferences": [
         "app/lib/state/account_api.dart"
       ],
@@ -53,9 +53,9 @@
     },
     {
       "endpoint": "account/getProfile",
-      "status": "in-progress",
+      "status": "implemented",
       "owner": "native-engine",
-      "test": null,
+      "test": "packages/dsh_client/test/native_go_contract_test.dart",
       "clientReferences": [
         "app/lib/state/account_api.dart"
       ],
@@ -63,9 +63,9 @@
     },
     {
       "endpoint": "account/getState",
-      "status": "in-progress",
+      "status": "implemented",
       "owner": "native-engine",
-      "test": null,
+      "test": "packages/dsh_client/test/native_go_contract_test.dart",
       "clientReferences": [
         "app/lib/state/account_api.dart"
       ],
@@ -73,9 +73,9 @@
     },
     {
       "endpoint": "account/hasRunningAccountTasks",
-      "status": "in-progress",
+      "status": "implemented",
       "owner": "native-engine",
-      "test": null,
+      "test": "packages/dsh_client/test/native_go_contract_test.dart",
       "clientReferences": [
         "app/lib/state/account_api.dart"
       ],
@@ -83,9 +83,9 @@
     },
     {
       "endpoint": "account/signOut",
-      "status": "in-progress",
+      "status": "implemented",
       "owner": "native-engine",
-      "test": null,
+      "test": "packages/dsh_client/test/native_go_contract_test.dart",
       "clientReferences": [
         "app/lib/state/account_api.dart"
       ],
@@ -99,7 +99,7 @@
       "clientReferences": [
         "app/lib/state/account_api.dart"
       ],
-      "note": null
+      "note": "The native engine reports a truthful signed-out state; DeepSeek PKCE sign-in is not wired yet."
     },
     {
       "endpoint": "agentPresets/list",
@@ -133,9 +133,9 @@
     },
     {
       "endpoint": "appAuth/answer",
-      "status": "in-progress",
+      "status": "implemented",
       "owner": "native-engine",
-      "test": null,
+      "test": "packages/dsh_client/test/native_go_contract_test.dart",
       "clientReferences": [
         "packages/dsh_client/lib/src/subscriptions_api.dart"
       ],
@@ -149,13 +149,13 @@
       "clientReferences": [
         "packages/dsh_client/lib/src/subscriptions_api.dart"
       ],
-      "note": null
+      "note": "Subscription sign-in is reported as unavailable instead of pretending to start."
     },
     {
       "endpoint": "appAuth/cancel",
-      "status": "in-progress",
+      "status": "implemented",
       "owner": "native-engine",
-      "test": null,
+      "test": "packages/dsh_client/test/native_go_contract_test.dart",
       "clientReferences": [
         "packages/dsh_client/lib/src/subscriptions_api.dart"
       ],
@@ -163,9 +163,9 @@
     },
     {
       "endpoint": "appAuth/list",
-      "status": "in-progress",
+      "status": "implemented",
       "owner": "native-engine",
-      "test": null,
+      "test": "packages/dsh_client/test/native_go_contract_test.dart",
       "clientReferences": [
         "packages/dsh_client/lib/src/subscriptions_api.dart"
       ],
@@ -173,9 +173,9 @@
     },
     {
       "endpoint": "appAuth/poll",
-      "status": "in-progress",
+      "status": "implemented",
       "owner": "native-engine",
-      "test": null,
+      "test": "packages/dsh_client/test/native_go_contract_test.dart",
       "clientReferences": [
         "packages/dsh_client/lib/src/subscriptions_api.dart"
       ],
@@ -183,9 +183,9 @@
     },
     {
       "endpoint": "appAuth/signOut",
-      "status": "in-progress",
+      "status": "implemented",
       "owner": "native-engine",
-      "test": null,
+      "test": "packages/dsh_client/test/native_go_contract_test.dart",
       "clientReferences": [
         "packages/dsh_client/lib/src/subscriptions_api.dart"
       ],
@@ -219,7 +219,7 @@
       "clientReferences": [
         "packages/dsh_client/lib/src/cot_translation_api.dart"
       ],
-      "note": null
+      "note": "Model-backed chain-of-thought translation is not wired yet."
     },
     {
       "endpoint": "cotTranslation/translate",
@@ -229,7 +229,7 @@
       "clientReferences": [
         "packages/dsh_client/lib/src/cot_translation_api.dart"
       ],
-      "note": null
+      "note": "Model-backed chain-of-thought translation is not wired yet."
     },
     {
       "endpoint": "credentials/describe",
@@ -284,9 +284,9 @@
     },
     {
       "endpoint": "dynamicCordisRunner/inventory",
-      "status": "in-progress",
+      "status": "implemented",
       "owner": "native-engine",
-      "test": null,
+      "test": "packages/dsh_client/test/native_go_contract_test.dart",
       "clientReferences": [
         "packages/dsh_client/lib/src/cordis_api.dart"
       ],
@@ -300,7 +300,7 @@
       "clientReferences": [
         "packages/dsh_client/lib/src/cordis_api.dart"
       ],
-      "note": null
+      "note": "Dynamic Cordis plugins require a Node-compatible runtime, which the standalone engine does not ship."
     },
     {
       "endpoint": "dynamicCordisRunner/undefineFromPanel",
@@ -310,7 +310,7 @@
       "clientReferences": [
         "packages/dsh_client/lib/src/cordis_api.dart"
       ],
-      "note": null
+      "note": "Dynamic Cordis plugins require a Node-compatible runtime, which the standalone engine does not ship."
     },
     {
       "endpoint": "fileReferences/list",
@@ -474,13 +474,13 @@
     },
     {
       "endpoint": "officeToPdf/render",
-      "status": "in-progress",
+      "status": "blocked",
       "owner": "native-engine",
       "test": null,
       "clientReferences": [
         "packages/dsh_client/lib/src/files_api.dart"
       ],
-      "note": null
+      "note": "Office-to-PDF conversion requires LibreOffice, which is not bundled in the standalone native engine."
     },
     {
       "endpoint": "permissionPresets/catalog",
@@ -494,13 +494,13 @@
     },
     {
       "endpoint": "pluginInventory/list",
-      "status": "placeholder",
+      "status": "implemented",
       "owner": "native-engine",
-      "test": null,
+      "test": "packages/dsh_client/test/native_go_contract_test.dart",
       "clientReferences": [
         "packages/dsh_client/lib/src/engine_settings_api.dart"
       ],
-      "note": "Returns a truthful empty native inventory; native plugin management is not implemented."
+      "note": null
     },
     {
       "endpoint": "pluginManager/cancelInstall",
@@ -510,7 +510,7 @@
       "clientReferences": [
         "packages/dsh_client/lib/src/plugins_api.dart"
       ],
-      "note": null
+      "note": "Native plugin installation is not available yet."
     },
     {
       "endpoint": "pluginManager/inspect",
@@ -520,7 +520,7 @@
       "clientReferences": [
         "packages/dsh_client/lib/src/plugins_api.dart"
       ],
-      "note": null
+      "note": "Native plugin inspection is not available yet."
     },
     {
       "endpoint": "pluginManager/installBundle",
@@ -530,33 +530,33 @@
       "clientReferences": [
         "packages/dsh_client/lib/src/plugins_api.dart"
       ],
-      "note": null
+      "note": "The standalone engine does not run Node plugin packages; installation is explicitly unsupported."
     },
     {
       "endpoint": "pluginManager/listBundles",
-      "status": "placeholder",
+      "status": "implemented",
       "owner": "native-engine",
-      "test": null,
+      "test": "packages/dsh_client/test/native_go_contract_test.dart",
       "clientReferences": [
         "packages/dsh_client/lib/src/plugins_api.dart"
       ],
-      "note": "Native plugin bundles are not implemented."
+      "note": null
     },
     {
       "endpoint": "pluginManager/listPlugins",
-      "status": "placeholder",
+      "status": "implemented",
       "owner": "native-engine",
-      "test": null,
+      "test": "packages/dsh_client/test/native_go_contract_test.dart",
       "clientReferences": [
         "packages/dsh_client/lib/src/plugins_api.dart"
       ],
-      "note": "Native plugin lifecycle is not implemented."
+      "note": null
     },
     {
       "endpoint": "pluginManager/registries",
-      "status": "in-progress",
+      "status": "implemented",
       "owner": "native-engine",
-      "test": null,
+      "test": "packages/dsh_client/test/native_go_contract_test.dart",
       "clientReferences": [
         "packages/dsh_client/lib/src/plugins_api.dart"
       ],
@@ -570,7 +570,7 @@
       "clientReferences": [
         "packages/dsh_client/lib/src/plugins_api.dart"
       ],
-      "note": null
+      "note": "Native plugin bundles are not available yet."
     },
     {
       "endpoint": "pluginManager/setBundleEnabled",
@@ -580,7 +580,7 @@
       "clientReferences": [
         "packages/dsh_client/lib/src/plugins_api.dart"
       ],
-      "note": null
+      "note": "Native plugin lifecycle is not available yet."
     },
     {
       "endpoint": "pluginManager/setPluginEnabled",
@@ -590,7 +590,7 @@
       "clientReferences": [
         "packages/dsh_client/lib/src/plugins_api.dart"
       ],
-      "note": null
+      "note": "Native plugin lifecycle is not available yet."
     },
     {
       "endpoint": "pluginManager/waitForInstall",
@@ -600,7 +600,7 @@
       "clientReferences": [
         "packages/dsh_client/lib/src/plugins_api.dart"
       ],
-      "note": null
+      "note": "Native plugin installation is not available yet."
     },
     {
       "endpoint": "schedule/catalog",
@@ -864,7 +864,7 @@
       "clientReferences": [
         "packages/dsh_client/lib/src/speech_api.dart"
       ],
-      "note": null
+      "note": "Speech recognition is owned by the Android voice plugin; the Go engine does not expose it yet."
     },
     {
       "endpoint": "speech/catalog",
@@ -874,7 +874,7 @@
       "clientReferences": [
         "packages/dsh_client/lib/src/speech_api.dart"
       ],
-      "note": null
+      "note": "Speech recognition is owned by the Android voice plugin; the Go engine does not expose it yet."
     },
     {
       "endpoint": "speech/configure",
@@ -884,7 +884,7 @@
       "clientReferences": [
         "packages/dsh_client/lib/src/speech_api.dart"
       ],
-      "note": null
+      "note": "Speech recognition is owned by the Android voice plugin; the Go engine does not expose it yet."
     },
     {
       "endpoint": "speech/prepare",
@@ -894,7 +894,7 @@
       "clientReferences": [
         "packages/dsh_client/lib/src/speech_api.dart"
       ],
-      "note": null
+      "note": "Speech recognition is owned by the Android voice plugin; the Go engine does not expose it yet."
     },
     {
       "endpoint": "speech/transcribe",
@@ -904,7 +904,7 @@
       "clientReferences": [
         "packages/dsh_client/lib/src/speech_api.dart"
       ],
-      "note": null
+      "note": "Speech recognition is owned by the Android voice plugin; the Go engine does not expose it yet."
     },
     {
       "endpoint": "subagents/interruptByParent",
@@ -914,7 +914,7 @@
       "clientReferences": [
         "packages/dsh_client/lib/src/agents_api.dart"
       ],
-      "note": null
+      "note": "Subagent routing is not wired into the native server yet."
     },
     {
       "endpoint": "subagents/prompt",
@@ -924,7 +924,7 @@
       "clientReferences": [
         "packages/dsh_client/lib/src/agents_api.dart"
       ],
-      "note": null
+      "note": "Subagent routing is not wired into the native server yet."
     },
     {
       "endpoint": "terminal/close",
@@ -1151,9 +1151,9 @@
     },
     {
       "endpoint": "account/watch",
-      "status": "in-progress",
+      "status": "implemented",
       "owner": "native-engine",
-      "test": null,
+      "test": "packages/dsh_client/test/native_go_contract_test.dart",
       "clientReferences": [
         "app/lib/state/account_api.dart"
       ],

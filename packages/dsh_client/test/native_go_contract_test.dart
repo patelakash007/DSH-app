@@ -291,6 +291,22 @@ void main() {
       expect((commands! as List).whereType<Map>().map((command) => command['name']), contains('permission'));
     });
 
+    test('native account, app-auth, and plugin capability states', () async {
+      final account = await client.rpc.call('account/getState') as Map;
+      expect(account['status'], 'signed-out');
+      expect((account['links'] as Map)['usageUrl'], isNotEmpty);
+      expect(await client.rpc.call('account/getProfile'), isNull);
+      expect(await client.rpc.call('account/hasRunningAccountTasks'), isFalse);
+      final subscriptions = await client.rpc.call('appAuth/list') as Map;
+      expect((subscriptions['providers'] as List).map((provider) => (provider as Map)['id']), containsAll(['openai-codex', 'anthropic']));
+      final inventory = await client.rpc.call('dynamicCordisRunner/inventory');
+      expect(inventory, isEmpty);
+      final install = await client.rpc.call('pluginManager/installBundle', {
+        'request': {'bundleId': 'missing-native-bundle'},
+      }) as Map;
+      expect(install['code'], 'plugin-manager/unsupported');
+    });
+
     test('native custom provider settings, discovery, and routing', () async {
       final upstream = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
       addTearDown(() => upstream.close(force: true));

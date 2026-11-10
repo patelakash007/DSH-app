@@ -1,8 +1,5 @@
 {
   "rpc": {
-    "pluginInventory/list": "placeholder",
-    "pluginManager/listBundles": "placeholder",
-    "pluginManager/listPlugins": "placeholder",
     "settings/describe": "in-progress",
     "settings/mutate": "in-progress",
     "settings/update": "in-progress",
@@ -14,7 +11,28 @@
     "terminal/rename": "in-progress",
     "terminal/resize": "in-progress",
     "terminal/shells": "in-progress",
-    "terminal/write": "in-progress"
+    "terminal/write": "in-progress",
+    "account/startSignIn": "in-progress",
+    "appAuth/begin": "in-progress",
+    "pluginManager/installBundle": "in-progress",
+    "pluginManager/cancelInstall": "in-progress",
+    "pluginManager/waitForInstall": "in-progress",
+    "pluginManager/removeBundle": "in-progress",
+    "pluginManager/setPluginEnabled": "in-progress",
+    "pluginManager/setBundleEnabled": "in-progress",
+    "pluginManager/inspect": "in-progress",
+    "dynamicCordisRunner/stopFromPanel": "in-progress",
+    "dynamicCordisRunner/undefineFromPanel": "in-progress",
+    "cotTranslation/limits": "in-progress",
+    "cotTranslation/translate": "in-progress",
+    "speech/catalog": "in-progress",
+    "speech/configure": "in-progress",
+    "speech/prepare": "in-progress",
+    "speech/transcribe": "in-progress",
+    "speech/cancelPreparation": "in-progress",
+    "subagents/prompt": "in-progress",
+    "subagents/interruptByParent": "in-progress",
+    "officeToPdf/render": "blocked"
   },
   "mux": {
     "terminal/attach": "in-progress",
@@ -22,9 +40,6 @@
     "terminal/retain": "in-progress"
   },
   "notes": {
-    "pluginInventory/list": "Returns a truthful empty native inventory; native plugin management is not implemented.",
-    "pluginManager/listBundles": "Native plugin bundles are not implemented.",
-    "pluginManager/listPlugins": "Native plugin lifecycle is not implemented.",
     "settings/describe": "Native settings are durable and schema-driven for built-in namespaces; plugin/provider namespaces are still pending.",
     "settings/mutate": "Atomic set/unset and revisions work for built-in native namespaces; plugin/provider namespaces are still pending.",
     "settings/update": "Atomic patches and revisions work for built-in native namespaces; plugin/provider namespaces are still pending.",
@@ -39,6 +54,27 @@
     "terminal/resize": "Geometry metadata is updated, but there is no kernel PTY resize yet.",
     "terminal/retain": "Native terminal retention works; true PTY allocation is still pending.",
     "terminal/shells": "The Android system shell is exposed; bundled Bash is not provided.",
-    "terminal/write": "Native shell input works; true PTY line discipline is still pending."
+    "terminal/write": "Native shell input works; true PTY line discipline is still pending.",
+    "account/startSignIn": "The native engine reports a truthful signed-out state; DeepSeek PKCE sign-in is not wired yet.",
+    "appAuth/begin": "Subscription sign-in is reported as unavailable instead of pretending to start.",
+    "pluginManager/installBundle": "The standalone engine does not run Node plugin packages; installation is explicitly unsupported.",
+    "pluginManager/cancelInstall": "Native plugin installation is not available yet.",
+    "pluginManager/waitForInstall": "Native plugin installation is not available yet.",
+    "pluginManager/removeBundle": "Native plugin bundles are not available yet.",
+    "pluginManager/setPluginEnabled": "Native plugin lifecycle is not available yet.",
+    "pluginManager/setBundleEnabled": "Native plugin lifecycle is not available yet.",
+    "pluginManager/inspect": "Native plugin inspection is not available yet.",
+    "dynamicCordisRunner/stopFromPanel": "Dynamic Cordis plugins require a Node-compatible runtime, which the standalone engine does not ship.",
+    "dynamicCordisRunner/undefineFromPanel": "Dynamic Cordis plugins require a Node-compatible runtime, which the standalone engine does not ship.",
+    "cotTranslation/limits": "Model-backed chain-of-thought translation is not wired yet.",
+    "cotTranslation/translate": "Model-backed chain-of-thought translation is not wired yet.",
+    "speech/catalog": "Speech recognition is owned by the Android voice plugin; the Go engine does not expose it yet.",
+    "speech/configure": "Speech recognition is owned by the Android voice plugin; the Go engine does not expose it yet.",
+    "speech/prepare": "Speech recognition is owned by the Android voice plugin; the Go engine does not expose it yet.",
+    "speech/transcribe": "Speech recognition is owned by the Android voice plugin; the Go engine does not expose it yet.",
+    "speech/cancelPreparation": "Speech recognition is owned by the Android voice plugin; the Go engine does not expose it yet.",
+    "subagents/prompt": "Subagent routing is not wired into the native server yet.",
+    "subagents/interruptByParent": "Subagent routing is not wired into the native server yet.",
+    "officeToPdf/render": "Office-to-PDF conversion requires LibreOffice, which is not bundled in the standalone native engine."
   }
 }
