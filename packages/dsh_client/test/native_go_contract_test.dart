@@ -291,6 +291,21 @@ void main() {
       expect((commands! as List).whereType<Map>().map((command) => command['name']), contains('permission'));
     });
 
+    test('native subagent routing errors', () async {
+      const missing = SubagentAddress(
+        parentSessionId: 'missing-native-parent',
+        childSessionId: 'missing-native-child',
+      );
+      await expectLater(
+        client.promptSubagent(missing, 'continue'),
+        throwsA(isA<SubagentReadOnlyException>()),
+      );
+      await expectLater(
+        client.interruptSubagent(missing),
+        throwsA(isA<DshRemoteException>().having((e) => e.code, 'code', 'subagent/parent-unavailable')),
+      );
+    });
+
     test('native session export archive', () async {
       final sessionId = (await client.createSession()).sessionId;
       final ended = Completer<TurnEndedEvent>();

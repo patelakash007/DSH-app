@@ -4,8 +4,8 @@
   "counts": {
     "rpc": {
       "total": 111,
-      "implemented": 77,
-      "in-progress": 33,
+      "implemented": 79,
+      "in-progress": 31,
       "blocked": 1
     },
     "mux": {
@@ -908,23 +908,23 @@
     },
     {
       "endpoint": "subagents/interruptByParent",
-      "status": "in-progress",
+      "status": "implemented",
       "owner": "native-engine",
-      "test": null,
+      "test": "packages/dsh_client/test/native_go_contract_test.dart",
       "clientReferences": [
         "packages/dsh_client/lib/src/agents_api.dart"
       ],
-      "note": "Subagent routing is not wired into the native server yet."
+      "note": null
     },
     {
       "endpoint": "subagents/prompt",
-      "status": "in-progress",
+      "status": "implemented",
       "owner": "native-engine",
-      "test": null,
+      "test": "packages/dsh_client/test/native_go_contract_test.dart",
       "clientReferences": [
         "packages/dsh_client/lib/src/agents_api.dart"
       ],
-      "note": "Subagent routing is not wired into the native server yet."
+      "note": null
     },
     {
       "endpoint": "terminal/close",
