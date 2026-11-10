@@ -11,6 +11,7 @@
   "remotePairPasteEmpty": "No pairing link on the clipboard",
   "remotePairFromImage": "From photos",
   "remotePairImageNoCode": "No QR code found in that image",
+  "remotePairScannerFailed": "The QR reader is unavailable. Paste the pairing link to continue pairing.",
   "remotePairCameraDenied": "No camera access. Turn it on in system settings, or use From photos or Paste pairing link.",
   "remotePairCameraFailed": "The camera didn’t open. Use From photos or Paste pairing link.",
   "remotePairReading": "Reading the pairing code…",

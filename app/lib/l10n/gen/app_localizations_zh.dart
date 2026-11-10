@@ -15200,6 +15200,9 @@ class L10nZh extends L10n {
   String get remotePairImageNoCode => '这张图里没找到二维码';
 
   @override
+  String get remotePairScannerFailed => '二维码识别器不可用。可以粘贴配对链接继续配对。';
+
+  @override
   String get remotePairCameraDenied => '没有相机权限。可以在系统设置里打开，或者用「从相册识别」「粘贴配对链接」';
 
   @override

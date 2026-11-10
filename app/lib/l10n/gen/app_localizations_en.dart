@@ -15986,6 +15986,9 @@ class L10nEn extends L10n {
   String get remotePairImageNoCode => 'No QR code found in that image';
 
   @override
+  String get remotePairScannerFailed => 'The QR reader is unavailable. Paste the pairing link to continue pairing.';
+
+  @override
   String get remotePairCameraDenied =>
       'No camera access. Turn it on in system settings, or use From photos or Paste pairing link.';
 

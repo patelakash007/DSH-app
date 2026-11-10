@@ -27716,6 +27716,12 @@ abstract class L10n {
   /// **'这张图里没找到二维码'**
   String get remotePairImageNoCode;
 
+  /// No description provided for @remotePairScannerFailed.
+  ///
+  /// In zh, this message translates to:
+  /// **'二维码识别器不可用。可以粘贴配对链接继续配对。'**
+  String get remotePairScannerFailed;
+
   /// No description provided for @remotePairCameraDenied.
   ///
   /// In zh, this message translates to:

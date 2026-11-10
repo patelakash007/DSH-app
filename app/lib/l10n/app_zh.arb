@@ -9426,6 +9426,7 @@
   "remotePairPasteEmpty": "剪贴板里没有配对链接",
   "remotePairFromImage": "从相册识别",
   "remotePairImageNoCode": "这张图里没找到二维码",
+  "remotePairScannerFailed": "二维码识别器不可用。可以粘贴配对链接继续配对。",
   "remotePairCameraDenied": "没有相机权限。可以在系统设置里打开，或者用「从相册识别」「粘贴配对链接」",
   "remotePairCameraFailed": "相机打不开。可以用「从相册识别」或「粘贴配对链接」",
   "remotePairReading": "正在读取配对信息…",
