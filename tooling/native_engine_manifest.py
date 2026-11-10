@@ -54,6 +54,7 @@ def main() -> None:
                 "background-jobs-v1",
                 "message-feedback-v1",
                 "reference-discovery-v1",
+                "reference-snapshots-v1",
                 "account-state-v1",
                 "cot-translation-v1",
                 "custom-providers-v1",

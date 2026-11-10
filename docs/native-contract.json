@@ -4,8 +4,8 @@
   "counts": {
     "rpc": {
       "total": 111,
-      "implemented": 82,
-      "in-progress": 28,
+      "implemented": 83,
+      "in-progress": 27,
       "blocked": 1
     },
     "mux": {
@@ -805,13 +805,13 @@
     },
     {
       "endpoint": "sessionReferenceResolver/candidates",
-      "status": "in-progress",
+      "status": "implemented",
       "owner": "native-engine",
-      "test": null,
+      "test": "packages/dsh_client/test/native_go_contract_test.dart",
       "clientReferences": [
         "packages/dsh_client/lib/src/references_api.dart"
       ],
-      "note": "Discovery and canonical mentions work; model-surface snapshot injection is still pending."
+      "note": null
     },
     {
       "endpoint": "settings/describe",

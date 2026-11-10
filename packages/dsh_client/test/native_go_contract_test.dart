@@ -291,6 +291,17 @@ void main() {
       expect((commands! as List).whereType<Map>().map((command) => command['name']), contains('permission'));
     });
 
+    test('native reference candidates', () async {
+      final first = (await client.createSession()).sessionId;
+      final second = (await client.createSession()).sessionId;
+      final sessions = await client.sessionReferences(first, '');
+      expect(sessions.map((candidate) => candidate.sessionId), contains(second));
+      expect(sessions.map((candidate) => candidate.sessionId), isNot(contains(first)));
+      expect(sessions.first.mention, startsWith('@['));
+      final files = await client.fileReferences(first, 'contract');
+      expect(files.map((candidate) => candidate.path), contains('contract.txt'));
+    });
+
     test('native reasoning translation limits and failure', () async {
       final limits = await client.cotTranslationLimits();
       expect(limits.maxTextChars, 4000);
