@@ -291,6 +291,13 @@ void main() {
       expect((commands! as List).whereType<Map>().map((command) => command['name']), contains('permission'));
     });
 
+    test('native compact command is truthful on an empty session', () async {
+      final sessionId = (await client.createSession()).sessionId;
+      final result = await client.executeCommand(sessionId, '/compact');
+      expect(result.ok, isTrue);
+      expect(result.text, contains('Nothing to compact'));
+    });
+
     test('native account sign-in validates its callback origin', () async {
       await expectLater(
         client.rpc.call('account/startSignIn', {
