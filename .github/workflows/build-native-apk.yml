@@ -348,7 +348,7 @@ jobs:
               --v1-signing-enabled true --v2-signing-enabled true --v3-signing-enabled true \
               --out "$output" "$aligned"
             "$apksigner" verify --verbose --print-certs "$output" | tee "$RUNNER_TEMP/cert.txt"
-            signed_digest=$(sed -nE 's/^Signer #1 certificate SHA-256 digest:[[:space:]]*//p' "$RUNNER_TEMP/cert.txt" \
+            signed_digest=$(sed -nE 's/^.*certificate SHA-256 digest:[[:space:]]*//p' "$RUNNER_TEMP/cert.txt" \
               | tr -d ':' | tr '[:upper:]' '[:lower:]' | head -n 1)
             test "$signed_digest" = "$EXPECTED_SIGNER_SHA256"
             rm -f "$aligned"
