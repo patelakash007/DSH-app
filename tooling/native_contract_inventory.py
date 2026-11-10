@@ -24,6 +24,7 @@ OVERRIDES = ROOT / "tooling" / "native_contract_overrides.json"
 RPC_RE = re.compile(r"(?:\brpc|\.rpc)\.call\(\s*r?['\"]([^'\"]+/[^'\"]+)['\"]")
 MUX_RE = re.compile(r"(?:\bmux|\.mux)\.open\(\s*r?['\"]([^'\"]+/[^'\"]+|\$events)['\"]")
 RESILIENT_RE = re.compile(r"\b_resilient\(\s*r?['\"]([^'\"]+/[^'\"]+|\$events)['\"]")
+ITEMS_RE = re.compile(r"\b_items\(\s*r?['\"]([^'\"]+/[^'\"]+|\$events)['\"]")
 HTTP_RE = re.compile(r"r?['\"](/api/[^'\"?$ {}]+)['\"]")
 CASE_RE = re.compile(r'^\s*case\s+(.+?):\s*$', re.MULTILINE)
 QUOTED_RE = re.compile(r'"([^"]+)"')
@@ -97,9 +98,10 @@ def build(go_root: Path) -> dict[str, object]:
     sources = dart_sources()
     rpc = references(RPC_RE, sources)
     mux = references(MUX_RE, sources)
-    for endpoint, files in references(RESILIENT_RE, sources).items():
-        mux.setdefault(endpoint, [])
-        mux[endpoint] = sorted(set(mux[endpoint]) | set(files))
+    for pattern in (RESILIENT_RE, ITEMS_RE):
+        for endpoint, files in references(pattern, sources).items():
+            mux.setdefault(endpoint, [])
+            mux[endpoint] = sorted(set(mux[endpoint]) | set(files))
     # DshMux owns this stream internally; it is not opened at each call site.
     mux.setdefault("$events", ["packages/dsh_client/lib/src/mux.dart"])
     mux = dict(sorted(mux.items()))
