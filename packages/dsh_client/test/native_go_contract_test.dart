@@ -247,6 +247,20 @@ void main() {
       expect(await client.selectAgentPreset(sessionId, 'native'), 'native');
     });
 
+    test('native file and session reference discovery', () async {
+      final sourceId = (await client.createSession()).sessionId;
+      final files = await client.fileReferences(sourceId, 'contract');
+      expect(files.map((file) => file.path), contains('contract.txt'));
+
+      final targetId = (await client.createSession()).sessionId;
+      await client.renameSession(targetId, 'Reference target');
+      final sessions = await client.sessionReferences(sourceId, 'Reference target');
+      final target = sessions.singleWhere((candidate) => candidate.sessionId == targetId);
+      expect(target.label, 'Reference target');
+      expect(decodeSessionReferenceUri(target.mention.substring(target.mention.indexOf('dsh-session:'), target.mention.length - 1)), targetId);
+      expect(target.sameWorkspace, isTrue);
+    });
+
     test('session fork persists a closed history prefix', () async {
       final sourceId = (await client.createSession()).sessionId;
       final ended = Completer<TurnEndedEvent>();
