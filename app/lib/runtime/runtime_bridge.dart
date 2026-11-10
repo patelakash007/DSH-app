@@ -471,7 +471,8 @@ class ResetKeep {
   /// `$DSH_HOME/dsh-go` (ui.json) and the user's skills.
   final bool uiAndSkills;
 
-  /// Installed plugins with their settings, `cordis.patch.yml` and `.env`.
+  /// The native settings layer (`native-settings.json`) and the engine's key/value
+  /// store (`kv.db`, account and provider state). Cordis profiles no longer exist.
   final bool pluginsAndSettings;
 
   /// The reset dialog's starting choice.
@@ -560,7 +561,8 @@ class RuntimeBridge {
   Future<void> install({bool dropKept = false}) =>
       _methods.invokeMethod<void>('install', dropKept ? const {'dropKept': true} : null);
 
-  /// [phoneStorage] mounts the phone's shared storage at /sdcard (needs [requestStorage] first).
+  /// [phoneStorage] is kept for the channel contract; the native engine reads
+  /// shared storage through the app's native file bridge, not a mounted overlay.
   /// [mode] null keeps the current mode; [EngineMode.normal] while in safe mode starts the
   /// two-minute trial back in normal mode. [visualReplies] writes the dsh-ui section
   /// into the managed AGENTS.md.

@@ -26,9 +26,9 @@ You can add DSH to this phone anytime: tap **Install runtime** on the engine pag
 
 ## Updates and installed tools
 
-Normal engine updates replace only app-managed engine components, without rebuilding your Linux system. Apt tools such as gh, npm global packages in their default location, Python/pip packages, settings and workspaces stay. Bundled DSH, Node, pnpm, the bridge and their dedicated directories remain app-managed; do not install your own software there. A Node version change may still require rebuilding third-party native extensions: preserving files does not guarantee extension compatibility.
+Normal updates replace only the bundled engine. The native Go engine lives inside the APK as `libdsh.so`; your chats, settings, skills and workspace files under the app-private home stay where they are. There is no Linux guest, no apt, no Node.js and no npm/pnpm in the app, so nothing in the app directory should be managed as a Linux installation.
 
-Older runtimes are adopted after checking the architecture, Ubuntu version and Python. If compatibility cannot be confirmed, the update manifest is invalid, or a leftover process has not stopped, the update stops with an explanation. It never automatically wipes or rebuilds the environment. Retry an interrupted installation; do not delete recovery directories by hand.
+An incoming engine is adopted only when its ABI matches and its pinned revision and SHA-256 match the manifest. If verification fails, or a leftover engine process has not stopped, the update stops with an explanation. It never wipes your data automatically. Retry an interrupted installation; do not delete recovery directories by hand.
 
 Before changing the base system, make a full backup. Diagnostics bundles and exported chat logs are not environment backups. A complete backup must be taken with the engine stopped, include Linux files, permissions, symlinks, package databases and the home directory, be stored outside the runtime, and have a checked read/restore procedure. The app does not currently offer one-click full environment backup/restore. On a compatibility warning, keep the environment intact and contact the maintainer for help with offline export; do not reset or uninstall the app. Keeping the original environment is not an independent backup: clearing app data or uninstalling still loses it.
 

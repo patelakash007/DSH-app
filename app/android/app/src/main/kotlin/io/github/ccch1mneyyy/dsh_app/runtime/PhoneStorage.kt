@@ -38,29 +38,6 @@ object PhoneStorage {
         "hostPath" to hostRoot(),
     )
 
-    /** proot `-b` values: the phone's storage at /sdcard, plus /storage for absolute paths apps share. */
-    fun binds(): List<String> {
-        // Skip the mount rather than fail the launch when the path isn't readable.
-        if (!java.io.File(hostRoot()).canRead()) return emptyList()
-        return listOf("${hostRoot()}:$GUEST_PATH", "/storage")
-    }
-
-    fun syncShortcut(rootfs: java.io.File, enabled: Boolean) {
-        // l10n:keep guest filesystem path
-        val link = java.io.File(rootfs, "root/手机存储")
-        try {
-            val info = android.system.Os.lstat(link.path)
-            if (!enabled && android.system.OsConstants.S_ISLNK(info.st_mode) &&
-                android.system.Os.readlink(link.path) == GUEST_PATH) {
-                link.delete()
-            }
-            return
-        } catch (_: Exception) {
-            // absent
-        }
-        if (enabled) runCatching { android.system.Os.symlink(GUEST_PATH, link.path) }
-    }
-
     /** Opens the system "All files access" page for this app (Android 11+). */
     fun allFilesAccessIntent(context: Context): Intent? {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) return null

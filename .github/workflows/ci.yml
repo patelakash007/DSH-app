@@ -34,7 +34,6 @@ jobs:
     outputs:
       app: ${{ github.event_name != 'pull_request' || steps.filter.outputs.app == 'true' }}
       packages: ${{ github.event_name != 'pull_request' || steps.filter.outputs.packages == 'true' }}
-      runtime: ${{ github.event_name != 'pull_request' || steps.filter.outputs.runtime == 'true' }}
     steps:
       - id: filter
         if: github.event_name == 'pull_request'
@@ -45,7 +44,6 @@ jobs:
             ci: &ci .github/workflows/ci.yml
             app: [*ci, 'app/**', 'packages/**', 'sdk/plugin-kit/**', 'site/share/**', 'docs/guide/**', 'THIRD_PARTY_NOTICES.md']
             packages: [*ci, 'packages/**']
-            runtime: [*ci, 'runtime/**', 'examples/**', 'sdk/plugin-kit/**', 'app/tool/engine_auth/**', 'app/test/plugin_config/fixtures/**', 'app/test/media/fixtures/**']
 
   checks:
     name: Generated files, tooling, SDK, web
@@ -73,7 +71,7 @@ jobs:
         run: |
           python3 -m venv "$RUNNER_TEMP/venv"
           "$RUNNER_TEMP/venv/bin/pip" install -q Pillow==13.0.0 numpy==2.4.0
-          for dir in tooling runtime/tests app/tool; do
+          for dir in tooling app/tool; do
             "$RUNNER_TEMP/venv/bin/python" -m unittest discover -s "$dir" -p 'test_*.py'
           done
       - name: Plugin SDK
@@ -180,54 +178,6 @@ jobs:
             (cd "$pkg" && dart pub get --enforce-lockfile && dart analyze && dart test)
           done
 
-  runtime:
-    name: Runtime and bridge
-    needs: changes
-    if: needs.changes.outputs.runtime == 'true'
-    runs-on: ubuntu-24.04
-    timeout-minutes: 20
-    env:
-      UV_USE_IO_URING: 0
-    steps:
-      - *checkout
-      - *node
-      - name: Install a throwaway patched DSH
-        run: |
-          version=$(sed -nE 's/^DSH_VERSION="\$\{DSH_VERSION:-(.+)\}"$/\1/p' runtime/build-runtime.sh)
-          prefix="$RUNNER_TEMP/dsh"
-          mkdir "$prefix"
-          cp "runtime/locks/dsh-$version/package.json" "runtime/locks/dsh-$version/package-lock.json" "$prefix/"
-          npm ci --prefix "$prefix" --ignore-scripts --no-audit --no-fund
-          cp "$prefix/node_modules/@deepseek-ai/dsh-fs-local/lib/index.js" "$prefix/fs-local-original.js"
-          python3 -I runtime/lib/rtbuild.py patch-dsh --prefix "$prefix" --dsh-version "$version"
-          pnpm_version=$(sed -nE 's/^PNPM_VERSION="\$\{PNPM_VERSION:-(.+)\}"$/\1/p' runtime/build-runtime.sh)
-          pnpm_prefix="$RUNNER_TEMP/pnpm"
-          mkdir "$pnpm_prefix"
-          cp "runtime/locks/pnpm-$pnpm_version/package.json" "runtime/locks/pnpm-$pnpm_version/package-lock.json" "$pnpm_prefix/"
-          npm ci --prefix "$pnpm_prefix" --ignore-scripts --no-audit --no-fund
-          {
-            echo "DSH_PREFIX=$prefix"
-            echo "DSH_TEST_PREFIX=$prefix"
-            echo "PNPM_BIN=$pnpm_prefix/node_modules/pnpm/bin/pnpm.mjs"
-            echo "DSH_INSTALL=$prefix/node_modules/@deepseek-ai/dsh"
-            echo "DSH_TOOLS_DIR=$prefix/node_modules/@deepseek-ai/dsh-tools"
-            echo "DSH_FS_LOCAL_ORIGINAL_JS=$prefix/fs-local-original.js"
-          } >> "$GITHUB_ENV"
-      - name: Unit tests
-        run: |
-          node --test runtime/tests/*.test.mjs app/tool/engine_auth/*.test.mjs
-          python3 -I runtime/tests/test_patch_dsh.py
-      - name: Media and example plugins
-        run: |
-          (cd runtime/media/dsh-media && npm install --ignore-scripts --no-package-lock --no-audit --no-fund && npm test)
-          for plugin in examples/plugins/dsh-go-example-*/; do
-            (cd "$plugin" && npm test && npm run check)
-          done
-      - name: Route guard and native bridge against a real host
-        run: |
-          bash runtime/tests/run-guard-tests.sh "$DSH_PREFIX"
-          bash runtime/tests/run-native-tests.sh "$DSH_PREFIX"
-
   android:
     name: Android JVM
     needs: changes
@@ -258,7 +208,7 @@ jobs:
   ci-ok:
     name: CI OK
     if: always()
-    needs: [changes, checks, flutter, dart, runtime, android]
+    needs: [changes, checks, flutter, dart, android]
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:

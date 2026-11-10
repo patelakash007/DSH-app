@@ -24,7 +24,7 @@ class LocalFootprint {
   /// Free space where the runtime unpacks (app files dir), MiB.
   final int? freeStorageMb;
 
-  /// The rootfs once unpacked (`manifest.json` `uncompressedBytes`), MiB.
+  /// The bundled native engine's bytes on disk, MiB.
   final int? unpackedMb;
 
   /// Below this the remote host is the suggested way. Phones report less
@@ -32,15 +32,13 @@ class LocalFootprint {
   /// about 5.5 GB.
   static const lowMemoryMb = 5 * 1024;
 
-  /// What the engine (proot + Node + DSH) takes while it runs, MiB: its peak,
-  /// rounded. PSS from `/proc/<pid>/smaps_rollup` on the x86_64 emulator (DSH
-  /// 0.2.1-rc.2): node 275–306 MB for the first minute or so after start,
-  /// about 185 MB once settled and through a turn without a model; proot
-  /// about 1 MB. A real turn's tool processes come on top.
+  /// A planning budget for the native Go engine while it runs, MiB. This is not
+  /// a measured PSS for the Go engine: keep it conservative until the release
+  /// device measurements in `docs/native-go-completion-plan.md` replace it.
   static const engineMemoryMb = 300;
 
-  /// What the installer insists on (`RuntimeInstaller.checkFreeSpace`:
-  /// unpacked size + 15%).
+  /// Engine bytes + 15% of headroom; the native installer verifies the binary
+  /// rather than unpacking an archive, so this is informational.
   int? get requiredStorageMb => unpackedMb == null ? null : (unpackedMb! * 115 + 99) ~/ 100;
 
   int? get requiredRoundedMb => requiredStorageMb == null ? null : (requiredStorageMb! + 49) ~/ 50 * 50;
@@ -61,7 +59,12 @@ class LocalFootprint {
 final localFootprintProvider = FutureProvider<LocalFootprint>((ref) async {
   final info = await ref.watch(diagnosticsChannelProvider).info();
   int? whole(Object? v) => v is num && v >= 0 ? v.round() : null;
-  final unpacked = info.manifest['uncompressedBytes'];
+  // The native engine is shipped, not unpacked: report its binary size.
+  final engine = info.manifest['engine'];
+  final unpacked = switch (info.manifest['uncompressedBytes']) {
+    final num n when n > 0 => n,
+    _ => engine is Map ? engine['bytes'] : null,
+  };
   final memory = whole(info.device['memoryMb']);
   return LocalFootprint(
     totalMemoryMb: memory == 0 ? null : memory,

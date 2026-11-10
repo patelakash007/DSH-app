@@ -15,7 +15,6 @@ You need an installed `dsh` CLI and a complete dsh-go development checkout conta
 ```sh
 node --version
 npm --version
-pnpm --version
 dsh --version
 
 # Replace this with your complete dsh-go development checkout.

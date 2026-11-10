@@ -19,8 +19,7 @@ val hasWholeReleaseKey = listOf("storeFile", "keyAlias").all { !keyProps.getProp
     listOf("storePassword", "keyPassword").all { !keyProps.getProperty(it).isNullOrEmpty() } &&
     file(keyProps.getProperty("storeFile")).exists()
 
-// Per-ABI runtime bundles produced by runtime/build-runtime.sh.
-val runtimeOut = rootProject.file("../../runtime/out")
+// The native Go engine ships per ABI as libdsh.so in src/main/jniLibs.
 
 // versionCode is the build minute, same encoding as tooling/build_number.py:
 // (year - 2026) * 10^8 + MMDDhhmm at UTC+8. tooling/build-apk.sh passes it as
@@ -44,10 +43,10 @@ android {
 
     defaultConfig {
         applicationId = "io.github.ccch1mneyyy.dsh_app"
-        // java.nio.file (symlinks while unpacking the rootfs) needs API 26.
+        // java.nio.file and the native engine's process/path APIs need API 26.
         minSdk = 26
-        // Target 28 like Termux, so the API 29+ exec restriction on app-private
-        // files does not apply to binaries inside the rootfs.
+        // Target 28 is deliberate and documented in docs/architecture.md: this is
+        // an APK distributed from GitHub Releases, not a Play build.
         targetSdk = 28
         versionCode = flutter.versionCode.takeIf { it > 1 } ?: buildMinuteVersionCode()
         versionName = flutter.versionName
@@ -71,26 +70,19 @@ android {
         }
         getByName("arm64") {
             jniLibs.srcDir("src/main/jniLibs")
-            if (File(runtimeOut, "arm64-v8a/assets").exists()) assets.srcDir(File(runtimeOut, "arm64-v8a/assets"))
-            if (File(runtimeOut, "arm64-v8a/jniLibs").exists()) jniLibs.srcDir(File(runtimeOut, "arm64-v8a/jniLibs"))
         }
         getByName("x64") {
-            if (File(runtimeOut, "x86_64/assets").exists()) assets.srcDir(File(runtimeOut, "x86_64/assets"))
-            if (File(runtimeOut, "x86_64/jniLibs").exists()) jniLibs.srcDir(File(runtimeOut, "x86_64/jniLibs"))
+            jniLibs.srcDir("src/main/jniLibs")
         }
     }
 
     packaging {
-        // proot and friends ship as lib*.so; they must be extracted to
-        // nativeLibraryDir so they can be executed.
+        // The Go engine ships as libdsh.so; it must be extracted to
+        // nativeLibraryDir so it can be executed.
         jniLibs {
             useLegacyPackaging = true
-            // These executable-shaped libraries must remain byte-identical to
-            // the files whose hashes are recorded in their runtime manifests.
-            keepDebugSymbols += listOf(
-                "**/libdsh.so",
-                "**/libproot.so", "**/libproot-loader.so", "**/libtalloc.so", "**/libandroid-shmem.so",
-            )
+            // Must remain byte-identical to the hash recorded in the runtime manifest.
+            keepDebugSymbols += listOf("**/libdsh.so")
         }
     }
 
@@ -154,11 +146,8 @@ dependencies {
     // Bundled Chinese OCR. SDK statistics disclosed separately; initialization is opt-in per use.
     implementation("com.google.mlkit:text-recognition-chinese:16.0.1")
     testImplementation("junit:junit:4.13.2")
-    // Android stubs do not implement JSONObject in local JVM upgrade tests.
+    // Android stubs do not implement JSONObject in local JVM tests.
     testImplementation("org.json:json:20240303")
-
-    // .tar.xz support for the rootfs bundle.
-    implementation("org.tukaani:xz:1.10")
 
     // 不打扰模式 (phone/background): a shell-uid privileged display via Shizuku or self-ADB.
     implementation("dev.rikka.shizuku:api:13.1.5")       // MIT

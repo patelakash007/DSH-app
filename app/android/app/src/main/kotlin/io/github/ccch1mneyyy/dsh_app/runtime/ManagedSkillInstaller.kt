@@ -158,14 +158,17 @@ internal object ManagedSkillInstaller {
             }
             if (!managed(request.files.getValue("SKILL.md"))) return ManagedSkillOutcome(reason = "invalid")
             checkCurrent()
+            // [root] is the guest-root view (`.../native-guest`), so `root/.dsh` is a symlink
+            // to the native home. Containment must compare canonical paths under that home,
+            // not under the view itself, or every install is rejected as escaped.
             val home = File(root, "root/.dsh")
-            if (!home.isDirectory) return ManagedSkillOutcome("noHome")
+            if (!isValidGuestHome(root, home)) return ManagedSkillOutcome("noHome")
             val dir = File(home, "skills/${request.name}")
-            val rootPath = root.canonicalFile.toPath()
+            val homePath = home.canonicalFile.toPath()
             val dirPath = dir.canonicalFile.toPath()
             // Fail closed for an escaped managed directory/file. This is not a sandbox against
             // another writer changing symlinks concurrently; rootfs swaps are serialized above.
-            if (!dirPath.startsWith(rootPath)) return ManagedSkillOutcome("userOwned")
+            if (!dirPath.startsWith(homePath)) return ManagedSkillOutcome("userOwned")
             for (path in bytes.keys) {
                 if (!File(dir, path).canonicalFile.toPath().startsWith(dirPath) ||
                     !File(dir, "$path.dsh-go-tmp").canonicalFile.toPath().startsWith(dirPath)) {

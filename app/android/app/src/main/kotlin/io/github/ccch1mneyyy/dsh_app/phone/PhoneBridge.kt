@@ -22,20 +22,14 @@ import java.util.concurrent.atomic.AtomicInteger
 import kotlin.concurrent.thread
 
 /**
- * The phone bridge: a unix-domain socket in the abstract namespace that the guest relay
- * connects to. proot passes abstract addresses through untranslated (filesystem socket paths are
- * rewritten into the rootfs and may exceed sun_path), so a Node process inside proot reaches it.
+ * The phone bridge: a private unix-domain socket (abstract namespace) plus an optional
+ * loopback TCP fallback, speaking MCP over newline-delimited JSON-RPC to [McpServer].
  *
- * Every connection must come from this app's uid (SO_PEERCRED) and start with a hello line
- * carrying this launch's token; then it is MCP over newline-delimited JSON-RPC, served by
- * [McpServer]. A per-launch random socket name keeps other apps from squatting it.
- *
- * Fallback: loopback TCP + token, opened only when asked (see [PhoneControl]); the
- * peer uid is checked through /proc/net/tcp when readable. Any app can reach loopback, so this
- * is weaker and used only on devices where the abstract socket turns out unreachable.
- *
- * Same-uid code (anything in the rootfs) gets past both checks by design: the real gate is the
- * person's tap on the confirmation.
+ * It is retained for the native engine's future phone transport: the pinned Go engine
+ * currently has no phone-bridge client, so [PhoneControl] does not mount it. Every
+ * connection must come from this app's uid (SO_PEERCRED) and start with a hello line
+ * carrying this launch's token; a per-launch random socket name keeps other apps from
+ * squatting it. The real action gate stays the person's tap on the confirmation.
  */
 class PhoneBridge(
     private val server: McpServer,
@@ -44,6 +38,7 @@ class PhoneBridge(
     private val admitEnd: (McpServer.Dispatch.RunEnd) -> EndWork = { EndWork(it.ack()) {} },
 ) {
     class EndWork(val reply: String, val finish: () -> Unit)
+    data class Endpoint(val abstractName: String?, val tcpPort: Int?, val token: String)
     @Volatile private var running = false
     private var local: LocalServerSocket? = null
     private var tcp: ServerSocket? = null
@@ -52,7 +47,7 @@ class PhoneBridge(
     private val slots = Semaphore(MAX_CONNECTIONS)
     private val authed = AtomicInteger()
 
-    @Volatile var endpoint: PhoneGuest.Endpoint? = null
+    @Volatile var endpoint: Endpoint? = null
         private set
 
     val listening: Boolean get() = running
@@ -61,7 +56,7 @@ class PhoneBridge(
 
     /** Binds a fresh abstract socket (and TCP when [withTcp]); returns what the relay needs. */
     @Synchronized
-    fun start(withTcp: Boolean): PhoneGuest.Endpoint {
+    fun start(withTcp: Boolean): Endpoint {
         stop()
         val token = hex(32)
         var name: String? = null
@@ -83,7 +78,7 @@ class PhoneBridge(
         }
         running = true
         authed.set(0)
-        val ep = PhoneGuest.Endpoint(name, port, token)
+        val ep = Endpoint(name, port, token)
         endpoint = ep
         local?.let { s -> thread(name = "dsh-phone-accept", isDaemon = true) { acceptLocal(s, token) } }
         tcp?.let { s -> thread(name = "dsh-phone-accept-tcp", isDaemon = true) { acceptTcp(s, token) } }
@@ -93,7 +88,7 @@ class PhoneBridge(
 
     /** Adds the loopback TCP listener to a running bridge (abstract socket unreachable from the guest). */
     @Synchronized
-    fun addTcp(): PhoneGuest.Endpoint? {
+    fun addTcp(): Endpoint? {
         val ep = endpoint ?: return null
         if (!running) return null
         if (ep.tcpPort != null) return ep

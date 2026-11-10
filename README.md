@@ -77,7 +77,7 @@ DSH requires **Android 8.0 (API 26) or later**.
 | `app/` | Flutter mobile frontend and Android Kotlin platform bridge |
 | `packages/dsh_client/` | Pure Dart client for the DSH Web API |
 | `packages/dsh_remote/` | Pure Dart client for DSH Remote gateway |
-| `runtime/` | Native Android runtime packaging, direct execution bridge, and process lifecycle |
+| `native-engine.lock.json` | Pinned revision of the native Go engine (`patelakash007/DSH-go-rewrite`) built into `libdsh.so` |
 | `sdk/plugin-kit/` | Native plugin authoring SDK for custom tool widgets and cards |
 | `examples/plugins/` | Reference plugins demonstrating forms, slots, and action cards |
 | `docs/guide/` | Comprehensive user guides and operational walkthroughs |
@@ -91,22 +91,30 @@ DSH requires **Android 8.0 (API 26) or later**.
 Prerequisites: Linux x86_64, JDK 17, Flutter 3.47.7+, Dart `^3.13.5`, Python 3, and standard build utilities.
 
 ```bash
-# Clone the repository
+# Clone this repository and the pinned native engine
 git clone https://github.com/patelakash007/DSH-app.git
 cd DSH-app
-
-# Set up toolchain and environment
 bash tooling/setup-toolchain.sh
 source tooling/env.sh
 
-# Build the native runtime bundle
-bash runtime/build-runtime.sh arm64-v8a
+# Build the Go engine for the APK ABI (Go 1.25.x, Android NDK for x86_64)
+git clone https://github.com/patelakash007/DSH-go-rewrite.git ../DSH-go-rewrite
+cd ../DSH-go-rewrite
+git checkout "$(python3 -c 'import json;print(json.load(open("../DSH-app/native-engine.lock.json"))["revision"])')"
+CGO_ENABLED=0 GOOS=android GOARCH=arm64 go build -trimpath -buildvcs=true \
+  -o ../DSH-app/app/android/app/src/main/jniLibs/arm64-v8a/libdsh.so ./cmd/dsh-server
+cd ../DSH-app
+
+# Record the engine hash/revision the app verifies at launch
+python3 tooling/native_engine_manifest.py --lock native-engine.lock.json \
+  --binary app/android/app/src/main/jniLibs/arm64-v8a/libdsh.so \
+  --abi arm64-v8a --output app/android/app/src/main/assets/runtime/manifest.json
 
 # Build the release APK
 bash tooling/build-apk.sh -f arm64 --keep-daemon
 ```
 
-The output APK will be generated at `app/build/app/outputs/flutter-apk/app-arm64-release.apk`.
+The output APK is generated at `app/build/app/outputs/flutter-apk/app-arm64-release.apk`. There is no PRoot, Ubuntu rootfs, Node.js, npm or pnpm step: the APK contains only the Go engine and the Flutter UI.
 
 ---
 

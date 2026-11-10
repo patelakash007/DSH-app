@@ -13,7 +13,7 @@ This change implements the native App UX, not another Host media protocol or a p
 
 ## Verification environment
 
-Android/PRoot Linux arm64; Flutter 3.47.7; Dart 3.13.5. A real linux-arm64 flutter_tester is available. Widget tests load actual Noto Sans CJK Light/Regular/Bold through DSH_TEST_FONT_DIR; no font, test bootstrap or pixel-comparator bypass is used.
+Android arm64 with the native Go engine; Flutter 3.47.7; Dart 3.13.5. A real linux-arm64 flutter_tester is available. Widget tests load actual Noto Sans CJK Light/Regular/Bold through DSH_TEST_FONT_DIR; no font, test bootstrap or pixel-comparator bypass is used.
 
 The mirror's online dependency resolution failed for image_picker_ios. An offline mirror attempt also selected unrelated newer packages; its generated lock changes were removed. Final resolution uses the original pub.dev registry with --offline --enforce-lockfile. The [App manifest](../../app/pubspec.yaml) and [dependency lock](../../app/pubspec.lock) remain unchanged. No playback package was added.
 

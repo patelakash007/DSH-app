@@ -3,6 +3,8 @@
 > Status: working roadmap, 2026-11-10
 > Scope: finish the native Go engine, preserve the tested Flutter UI, port every required local capability, migrate user data, and remove the Node/PRoot/Ubuntu fallback from every build path.
 > Repositories: [patelakash007/DSH-app](https://github.com/patelakash007/DSH-app) and [patelakash007/DSH-go-rewrite](https://github.com/patelakash007/DSH-go-rewrite).
+>
+> Update 2026-11-10: the legacy engine has been deleted from DSH-app. `runtime/` (rootfs builder, patches, Node bridge, media plugin, PRoot/direct shims, locks and their tests), the guest auth bridge, and the Kotlin direct-glibc launcher, rootfs installer/extractor, XZ reader and guest overlays are gone; `libdsh.so` is the only engine. The sections below are kept as the historical plan and for the remaining parity work.
 
 ## 0. Current implementation status (2026-11-10)
 

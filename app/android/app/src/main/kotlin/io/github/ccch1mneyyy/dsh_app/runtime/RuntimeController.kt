@@ -3,7 +3,6 @@ package io.github.ccch1mneyyy.dsh_app.runtime
 import io.github.ccch1mneyyy.dsh_app.i18n.AppStrings
 import io.github.ccch1mneyyy.dsh_app.R
 import android.content.Context
-import io.github.ccch1mneyyy.dsh_app.performance.PerformancePolicy
 import android.content.Intent
 import android.net.LinkProperties
 import android.os.Build
@@ -37,7 +36,7 @@ class RuntimeController private constructor(private val app: Context) : DshProce
     private val worker = Executors.newSingleThreadExecutor { r -> Thread(r, "dsh-runtime") }
     private val sinks = LinkedHashSet<EventSink>()
     private val statusPublishLock = Any()
-    private val logDir = File(app.filesDir, "runtime/logs")
+    private val logDir = NativeRuntimePaths.of(app).logs
     private val runtimeLogs = RuntimeLogs(
         File(logDir, "dsh.log"), SystemClock::elapsedRealtime,
         post = { action -> main.post { action() } },
@@ -47,15 +46,17 @@ class RuntimeController private constructor(private val app: Context) : DshProce
             targets.forEach { it.emit(event) }
         },
     )
-    private val lkgFile = File(app.filesDir, "runtime/lkg/lkg.json")
+    private val lkgFile = File(app.filesDir, "native/lkg/lkg.json")
     private val prefs = app.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
     private val workspaceRecovery = WorkspaceRecoveryMode(prefs.getBoolean(K_WORKSPACE_RECOVERY, false))
 
     val manifest: RuntimeManifest by lazy { RuntimeManifest.load(app) }
     private val installer by lazy { RuntimeInstaller(app, manifest, ::note) }
+    /** Guest-path view of the native homes for the recovery readers. */
+    private val guestRoot by lazy { NativeRuntimePaths.of(app).guestRoot() }
     @Volatile private var process: DshProcess? = null
     @Volatile private var lastLaunch: LaunchDiagnostics? = null
-    /** The start in progress is turning PRoot's fake hard links into real files (see [L2sMigration]). */
+    /** Retained for the Flutter status contract; the native engine has no file tidy step. */
     @Volatile private var tidyingFiles = false
 
     @Volatile var phase: Phase = Phase.NOT_INSTALLED
@@ -64,9 +65,12 @@ class RuntimeController private constructor(private val app: Context) : DshProce
     @Volatile private var token: String? = null
     @Volatile private var error: String? = null
     @Volatile private var pendingEnv: Map<String, String> = emptyMap()
-    @Volatile private var pendingPhoneStorage = false
     /** Whether the managed AGENTS.md tells the model about ```dsh-ui views (settings, on by default). */
     @Volatile private var pendingVisualReplies = true
+    /** Kept for the Flutter channel contract; native tools cannot see /sdcard either. */
+    @Volatile private var pendingPhoneStorage = false
+    /** One launch log line per process for settings the native engine cannot honor. */
+    @Volatile private var notedNativeLimits = false
 
     // Safe mode and failure detection. State that must survive the app being killed lives in [prefs].
     @Volatile private var safeState = SafeState.parse(prefs.getString(K_SAFE_STATE, null))
@@ -103,7 +107,6 @@ class RuntimeController private constructor(private val app: Context) : DshProce
     @Volatile private var bootProfile: ProfileSnapshot? = null
     private val runTail = ArrayDeque<String>()
     private val networkAccess = NetworkAccess()
-    private val dnsLog = DnsConfigLog()
 
     /** Start → spawn → listening, logged in one line when DSH comes up. */
     private val timeline = StartupTimeline.forThisProcess()
@@ -128,7 +131,7 @@ class RuntimeController private constructor(private val app: Context) : DshProce
         "bundledVersion" to runCatching { manifest.runtimeVersion }.getOrNull(),
         "installedVersion" to runCatching { installer.installedVersion() }.getOrNull(),
         "dshVersion" to runCatching { manifest.dshVersion }.getOrNull(),
-        "nodeVersion" to runCatching { manifest.nodeVersion }.getOrNull(),
+        "nodeVersion" to runCatching { manifest.nodeVersion }.getOrNull()?.takeIf { it.isNotBlank() && it != "none" },
         "phase" to phase.wire,
         "baseUrl" to baseUrl,
         "token" to token,
@@ -145,10 +148,12 @@ class RuntimeController private constructor(private val app: Context) : DshProce
         "healthyAt" to healthyAt,
         "networkBlocked" to networkAccess.isBlocked,
         "networkBlockedAt" to networkAccess.blockedAt,
-        "directEngineEnabled" to directEngine().enabled,
-        "directEngineAvailable" to directEngineAvailable(),
-        "directEngineActive" to (process?.executionMode == "direct"),
-        "directEngineFallbackReason" to lastLaunch?.fallbackReason,
+        // Retained for the existing Flutter status contract; the native engine has
+        // a single launch path, so there is no direct-glibc alternative.
+        "directEngineEnabled" to false,
+        "directEngineAvailable" to false,
+        "directEngineActive" to false,
+        "directEngineFallbackReason" to null,
         "currentExecutionMode" to process?.executionMode,
         "launchSelectedMode" to lastLaunch?.selectedMode,
         "launchSpawned" to (lastLaunch?.spawned == true),
@@ -156,24 +161,8 @@ class RuntimeController private constructor(private val app: Context) : DshProce
         "tidyingFiles" to tidyingFiles,
     )
 
-    private fun directEngine() = DirectLaunch.Preference(
-        saved = if (prefs.contains(K_DIRECT_ENGINE)) prefs.getBoolean(K_DIRECT_ENGINE, false) else null,
-        available = directEngineAvailable(),
-        failedRuntime = prefs.getString(K_DIRECT_FAILED, null),
-        runtime = runCatching { manifest.runtimeVersion }.getOrNull(),
-    )
-    private fun directEngineAvailable(): Boolean = runCatching {
-        manifest.raw.optJSONObject("directEngine")?.optInt("schema") == 2
-    }.getOrDefault(false)
-
-    /**
-     * An App-local option, on by default; a running process never changes its execution world.
-     * Any explicit choice also forgets an earlier failed Direct launch, so turning it on tries again.
-     */
-    @Synchronized fun setDirectEngine(enabled: Boolean) {
-        check(process == null && phase !in setOf(Phase.STARTING, Phase.RUNNING, Phase.STOPPING, Phase.INSTALLING) && !resetting) { "stop the engine before changing its launch method" }
-        check(!enabled || directEngineAvailable()) { "this bundled runtime does not support direct launch" }
-        prefs.edit().putBoolean(K_DIRECT_ENGINE, enabled).remove(K_DIRECT_FAILED).apply()
+    /** Retained for the Flutter channel; the native engine has one launch path. */
+    fun setDirectEngine(@Suppress("UNUSED_PARAMETER") enabled: Boolean) {
         emitStatus()
     }
 
@@ -205,7 +194,7 @@ class RuntimeController private constructor(private val app: Context) : DshProce
         return if (active) runSafe else safeState == SafeState.ON
     }
 
-    /** [dropKept]: give up what a reset kept but cannot be put back (see [KeepFailed]). */
+    /** [dropKept] is kept for the Flutter channel contract; a native reset never stages anything. */
     @Synchronized fun install(dropKept: Boolean = false, onDone: (Throwable?) -> Unit) {
         if (phase == Phase.INSTALLING) return onDone(null)
         if (installer.isCurrent() && phase != Phase.ERROR && !resetting) {
@@ -218,12 +207,9 @@ class RuntimeController private constructor(private val app: Context) : DshProce
         setPhase(Phase.INSTALLING)
         worker.execute {
             try {
-                log("[dsh-app] unpacking runtime ${manifest.runtimeVersion} (${manifest.abi})", "system")
+                log("[dsh-app] verifying native engine ${manifest.runtimeVersion} (${manifest.abi})", "system")
                 val started = System.currentTimeMillis()
-                if (installer.rootfs.exists() &&
-                    !DshProcess(app, manifest, installer.rootfs, this).killStrays()) {
-                    throw RuntimeUpgradeBlocked("running")
-                }
+                if (process != null) throw RuntimeUpgradeBlocked("running")
                 if (dropKept) log("[dsh-app] installing without what could not be kept", "system")
                 installer.install(dropKept) { done, total ->
                     emit(mapOf("type" to "progress", "step" to "extract", "done" to done, "total" to total))
@@ -255,13 +241,18 @@ class RuntimeController private constructor(private val app: Context) : DshProce
         mode: String? = null,
         visualReplies: Boolean = pendingVisualReplies,
     ) {
-        pendingPhoneStorage = phoneStorage
         pendingVisualReplies = visualReplies
+        pendingPhoneStorage = phoneStorage
         if (phase == Phase.RUNNING || phase == Phase.STARTING) return
         pendingEnv = env
         val next = SafePolicy.onStartRequest(safeState, mode)
-        if (next != safeState) {
-            setSafeState(next, if (next == SafeState.ON) SafePolicy.REASON_MANUAL else safeReason)
+        if (next == SafeState.ON) {
+            // The pinned Go engine has no rescue profile or --safe flag. Starting the
+            // same home and calling it safe mode would be a lie, so start normal mode.
+            log("[dsh-app] safe mode is not available for the native engine; starting normal mode", "system")
+            setSafeState(SafeState.OFF, null)
+        } else if (next != safeState) {
+            setSafeState(next, if (next == SafeState.PROBATION) SafePolicy.REASON_PROBATION else safeReason)
         }
         val intent = Intent(app, DshService::class.java).setAction(DshService.ACTION_START)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) app.startForegroundService(intent) else app.startService(intent)
@@ -270,7 +261,11 @@ class RuntimeController private constructor(private val app: Context) : DshProce
     fun publishDiagnostics(markdown: String, manual: Boolean = false): Map<String, Any?>? = try {
         if (!installer.isCurrent()) null
         else {
-            val file = GuestSetup.writeDiagnostics(installer.rootfs, markdown, safe = currentModeSafe(), manual = manual)
+            // Native tools are confined to the engine workspace. Writing under the home
+            // (the old guest path) made the report unreadable to the agent.
+            val dir = File(NativeRuntimePaths.of(app).workspaceRoot, "dsh-app").apply { mkdirs() }
+            val file = File(dir, if (manual) "diagnostics-manual.md" else "diagnostics.md")
+            file.writeText(markdown)
             mapOf("path" to file.absolutePath, "bytes" to file.length())
         }
     } catch (_: Exception) {
@@ -292,7 +287,9 @@ class RuntimeController private constructor(private val app: Context) : DshProce
             onDone(mapOf("result" to null, "current" to false, "reason" to if (request == null) "invalid" else "stale"))
             return
         }
-        managedSkills.submit(owner, request, installer.rootfs, current = {
+        // The Dart side sends GuestFs.local().root as expectedRoot; the installer and
+        // controller must use that same guest-root view, not the native home.
+        managedSkills.submit(owner, request, guestRoot, current = {
             managedSkillGate.current(run) && phase == Phase.RUNNING && runGen == run.runtimeGeneration &&
                 stopGen < run.runtimeGeneration && !resetting && token == run.token
         }, onDone = onDone)
@@ -312,7 +309,7 @@ class RuntimeController private constructor(private val app: Context) : DshProce
 
     @Synchronized internal fun capturePhoneSkillOrigin(): PhoneSkillOrigin? =
         if (phase == Phase.RUNNING && !runSafe && !resetting && stopGen < runGen &&
-            phoneSkillStoppedGeneration < runGen) PhoneSkillOrigin(this, runGen, installer.rootfs) else null
+            phoneSkillStoppedGeneration < runGen) PhoneSkillOrigin(this, runGen, guestRoot) else null
 
     // Read-only generation fence for physical action gates; never acquires the Runtime monitor.
     // The final generation read rejects mixed fields across an unexpected-exit/restart.
@@ -441,8 +438,11 @@ class RuntimeController private constructor(private val app: Context) : DshProce
         baseUrl = null
         token = null
         error = null
-        val safe = safeState == SafeState.ON
-        runSafe = safe
+        if (safeState != SafeState.OFF) {
+            log("[dsh-app] safe mode is not available for the native engine; starting normal mode", "system")
+            setSafeState(SafeState.OFF, null)
+        }
+        runSafe = false
         val gen = ++runGen
         readyAt = null
         healthyAt = null
@@ -452,40 +452,27 @@ class RuntimeController private constructor(private val app: Context) : DshProce
         worker.execute {
             var launched: DshProcess? = null
             try {
-                noteDns(GuestSetup.writeResolvConf(app, installer.rootfs), DnsConfigSource.START)
-                val storage = pendingPhoneStorage && PhoneStorage.isGranted(app) && PhoneStorage.binds().isNotEmpty()
-                PhoneStorage.syncShortcut(installer.rootfs, storage)
-                // Phone control: bridge up and guest files written before DSH starts; off in safe mode.
-                val phone = PhoneControl.get(app).prepareLaunch(installer.rootfs, safe) { log(it, "system") }
-                val searchOverlay = !safe && SessionSearchGuest.writeFiles(installer.rootfs)
-                if (!safe && !searchOverlay) {
-                    log("[dsh-app] message search overlay not written; searching matches titles only", "system")
+                // Phone control: start the Kotlin bridge. The native engine reaches it
+                // through its own channel, not through guest files.
+                PhoneControl.get(app).prepareLaunch(false) { log(it, "system") }
+                if (!notedNativeLimits) {
+                    notedNativeLimits = true
+                    // The engine has no AGENTS.md loader and its tools are workspace-confined.
+                    log("[dsh-app] visual replies: the native engine does not read a managed AGENTS.md; the setting has no effect", "system")
+                    if (pendingPhoneStorage) {
+                        log("[dsh-app] phone storage: native tools are confined to the workspace; /sdcard is not mounted", "system")
+                    }
                 }
-                val authOverlay = !safe && AppAuthGuest.writeFiles(app, installer.rootfs)
-                if (!safe && !authOverlay) {
-                    log("[dsh-app] subscription sign-in overlay not written; ChatGPT / Claude sign-in is unavailable", "system")
-                }
-                val speechOverlay = !safe && SpeechGuest.writeFiles(installer.rootfs)
-                if (!safe && !speechOverlay) {
-                    log("[dsh-app] voice input overlay not written; the voice model keeps DSH's defaults", "system")
-                }
-                if (pendingPhoneStorage && !storage) log("[dsh-app] phone storage requested but permission not granted", "system")
                 val env = LinkedHashMap<String, String>()
                 env["TZ"] = java.util.TimeZone.getDefault().id
                 env.putAll(pendingEnv)
                 workspaceRecovery.applyEnvironment(env)
-                PerformancePolicy.applyEngineEnvironment(app, env, manifest.launchArgv, manifest.launchEnv)
-                if (safe) {
-                    SafeMode.prepare(installer.rootfs, briefing())
-                    env.putAll(SafeMode.GUEST_ENV)
-                    bootProfile = null
-                    log("[dsh-app] safe mode: booting profile ${SafeMode.PROFILE} rebuilt from the web template, plugins off", "system")
-                } else {
-                    bootProfile = try {
-                        LastKnownGood.read(installer.rootfs)
-                    } catch (_: Exception) {
-                        null
-                    }
+                // No Node/PRoot performance env is applied: this engine is native Go, and
+                // NODE_OPTIONS/UV_THREADPOOL_SIZE would only be dead legacy wiring.
+                bootProfile = try {
+                    LastKnownGood.read(guestRoot)
+                } catch (_: Exception) {
+                    null
                 }
                 // startProcess advances runGen under this same monitor. Publish only while
                 // this queued launch still owns that generation; once published, its non-null
@@ -493,7 +480,7 @@ class RuntimeController private constructor(private val app: Context) : DshProce
                 val p = synchronized(this@RuntimeController) {
                     if (stopGen >= gen || gen != runGen) null
                     else DshProcess(
-                        app, manifest, installer.rootfs,
+                        app, manifest,
                         object : DshProcess.Listener by this@RuntimeController {
                             override fun onLog(line: String, stream: String) {
                                 if (stream != "system") {
@@ -517,12 +504,7 @@ class RuntimeController private constructor(private val app: Context) : DshProce
                     return@execute
                 }
                 timeline.spawned()
-                val direct = directEngine()
-                p.start(env, if (storage) PhoneStorage.binds() else emptyList(), safe, phone, direct.requested, direct.failed, searchOverlay, authOverlay, speechOverlay) { actualDirect ->
-                    // SafeMode.prepare writes its own briefing; leave the original home untouched.
-                    if (!safe) GuestSetup.writeAgentsMd(installer.rootfs, storage, phone, pendingVisualReplies, actualDirect)
-                }
-                if (phone) PhoneControl.get(app).launched(p.phoneMounted)
+                p.start(env)
             } catch (e: Throwable) {
                 // Keep ownership while the old UID sweep runs, including a
                 // failure after spawning but before the waiter was allocated.
@@ -572,23 +554,11 @@ class RuntimeController private constructor(private val app: Context) : DshProce
         return true
     }
 
-    /** The default network changed: point the guest's resolv.conf at its DNS. */
-    internal fun refreshDns(watch: NetworkAccess.Watch, properties: LinkProperties) {
-        val gen = runGen
-        val servers = GuestSetup.pickDns(properties.dnsServers)
-        worker.execute {
-            if ((phase == Phase.RUNNING || phase == Phase.STARTING) && installer.isCurrent()) {
-                // Check ownership where this queued write executes, not only in the callback.
-                // If a stop/start follows this check, its startup DNS write is later on this worker.
-                if (gen != runGen || stopGen >= gen || !networkAccess.isCurrent(watch)) return@execute
-                noteDns(GuestSetup.writeResolvConf(installer.rootfs, servers), DnsConfigSource.NETWORK)
-            }
-        }
-    }
-
-    private fun noteDns(report: DnsConfigReport, source: DnsConfigSource) {
-        dnsLog.line(report, source, System.currentTimeMillis(), SystemClock.elapsedRealtime())?.let { log(it, "system") }
-    }
+    /** The native engine resolves DNS itself; retained for the service's callback contract. */
+    internal fun refreshDns(
+        @Suppress("UNUSED_PARAMETER") watch: NetworkAccess.Watch,
+        @Suppress("UNUSED_PARAMETER") properties: LinkProperties,
+    ) = Unit
 
     /** The system blocked or restored this app's network (DshService's default network callback). */
     internal fun onNetworkBlocked(watch: NetworkAccess.Watch, blocked: Boolean, inForeground: Boolean) {
@@ -619,10 +589,7 @@ class RuntimeController private constructor(private val app: Context) : DshProce
                     p.stop()
                     check(p.awaitExit(15_000)) { "runtime stop incomplete; retry reset after cleanup" }
                 }
-                // A finished waiter may have reported incomplete cleanup. Captured identities
-                // outlive its launcher; do not retire their rootfs while any still remain.
-                val cleanup = DshProcess(app, manifest, installer.rootfs, this).reapStrays()
-                check(cleanup.complete) { "runtime stop incomplete; retry reset after cleanup" }
+                check(process == null) { "runtime stop incomplete; retry reset after cleanup" }
                 lastLaunch = null
                 try {
                     check(runtimeLogs.pauseDisk()) { "log reset pause timed out" }
@@ -679,7 +646,12 @@ class RuntimeController private constructor(private val app: Context) : DshProce
 
     // ── Safe mode / last known good (called by RuntimePlugin) ───────────────────────
 
-    fun autoSafe(): Boolean = prefs.getBoolean(K_AUTO_SAFE, true)
+    /**
+     * Always false: there is no rescue profile in the pinned native engine. Letting
+     * the old policy auto-restart into "safe mode" would restart the same engine and
+     * could loop forever. The UI switch stays for the channel contract only.
+     */
+    fun autoSafe(): Boolean = false
 
     fun setAutoSafe(enabled: Boolean) {
         prefs.edit().putBoolean(K_AUTO_SAFE, enabled).apply()
@@ -712,7 +684,7 @@ class RuntimeController private constructor(private val app: Context) : DshProce
         worker.execute {
             val result: Map<String, Any?> = try {
                 val lkg = LastKnownGood.load(lkgFile)
-                val current = LastKnownGood.read(installer.rootfs)
+                val current = LastKnownGood.read(guestRoot)
                 if (lkg == null || current == null) {
                     mapOf("available" to false, "at" to lkg?.at)
                 } else {
@@ -731,7 +703,7 @@ class RuntimeController private constructor(private val app: Context) : DshProce
             try {
                 checkRecoveryWrite(mainProfileOnly = true)
                 val lkg = LastKnownGood.load(lkgFile) ?: throw IllegalStateException(AppStrings.get(app, R.string.safe_no_good_config))
-                val plan = LastKnownGood.restore(installer.rootfs, lkg.snapshot, SafeMode.stamp(),
+                val plan = LastKnownGood.restore(guestRoot, lkg.snapshot, SafeMode.stamp(),
                     AppStrings.get(app, R.string.safe_config_missing), AppStrings.get(app, R.string.safe_config_busy))
                 log(
                     "[dsh-app] restored the last good plugin set from ${SafeMode.formatTime(lkg.at)}: " +
@@ -750,7 +722,7 @@ class RuntimeController private constructor(private val app: Context) : DshProce
     fun safePreflight(onDone: (List<Map<String, Any?>>) -> Unit) {
         worker.execute {
             val hazards = try {
-                SafeMode.preflight(installer.rootfs, AppStrings.get(app, R.string.safe_patch_hazard)) { names ->
+                SafeMode.preflight(guestRoot, AppStrings.get(app, R.string.safe_patch_hazard)) { names ->
                     AppStrings.get(app, R.string.safe_env_hazard, names.joinToString(if (AppStrings.isEnglish(app)) ", " else "、"))
                 }.map { it.toMap() }
             } catch (_: Exception) {
@@ -765,7 +737,7 @@ class RuntimeController private constructor(private val app: Context) : DshProce
         worker.execute {
             try {
                 checkRecoveryWrite(mainProfileOnly = false)
-                val outcome = SafeMode.moveAside(installer.rootfs, paths, SafeMode.stamp())
+                val outcome = SafeMode.moveAside(guestRoot, paths, SafeMode.stamp())
                 val moved = outcome.moved
                 if (moved.isNotEmpty()) {
                     val record = JSONArray(movedAside() + moved.map { (from, to) -> "$from → $to" })
@@ -786,8 +758,8 @@ class RuntimeController private constructor(private val app: Context) : DshProce
             RuntimeRecoveryGate.State(phase, process != null, runSafe, resetting)
         }
         RuntimeRecoveryGate.check(state, mainProfileOnly) {
-            // onExit can follow an incomplete sweep; inspect the shared captured identities again.
-            DshProcess(app, manifest, installer.rootfs, this).killStrays()
+            // The native engine has no tracees to sweep; the state check is the gate.
+            process == null
         }
     }
 
@@ -796,25 +768,6 @@ class RuntimeController private constructor(private val app: Context) : DshProce
         List(array.length()) { array.getString(it) }
     } catch (_: Exception) {
         emptyList()
-    }
-
-    private fun briefing(): SafeMode.Briefing {
-        val lkg = LastKnownGood.load(lkgFile)
-        val log = try {
-            File(logDir, MAIN_FAILURE_LOG).readLines()
-        } catch (_: Exception) {
-            emptyList()
-        }
-        val mainFailure = mainFailure
-        return SafeMode.Briefing(
-            failure = mainFailure,
-            reason = safeReason,
-            moved = movedAside(),
-            lkgAt = lkg?.at,
-            lkgBundles = lkg?.snapshot?.bundles ?: emptyList(),
-            lkgVersions = lkg?.snapshot?.versions ?: emptyMap(),
-            failureLog = if (mainFailure == null) emptyList() else log,
-        )
     }
 
     private fun setSafeState(next: SafeState, reason: String?) {
@@ -852,7 +805,7 @@ class RuntimeController private constructor(private val app: Context) : DshProce
     /** Bundles enabled or upgraded since the last good run: the first suspects of a new failure. */
     private fun recentChanges(): List<String> = try {
         val lkg = LastKnownGood.load(lkgFile)
-        val current = bootProfile ?: LastKnownGood.read(installer.rootfs)
+        val current = bootProfile ?: LastKnownGood.read(guestRoot)
         if (lkg == null || current == null) {
             emptyList()
         } else {
@@ -966,7 +919,7 @@ class RuntimeController private constructor(private val app: Context) : DshProce
         if (!runSafe) {
             // First boot creates the profile after startProcess reads it. Capture it before
             // RUNNING lets the app change it; a later disk read would not describe this boot.
-            bootProfile = LastKnownGood.bootedAtReady(bootProfile) { LastKnownGood.read(installer.rootfs) }
+            bootProfile = LastKnownGood.bootedAtReady(bootProfile) { LastKnownGood.read(guestRoot) }
         }
         if (!runSafe) healthyAt = System.currentTimeMillis() + SafePolicy.HEALTHY_MS
         log("[dsh-app] DSH is listening at $baseUrl${if (runSafe) " (safe mode)" else ""}", "system")
@@ -1016,8 +969,11 @@ class RuntimeController private constructor(private val app: Context) : DshProce
                 return
             }
             if (!runSafe) f = f.copy(recent = recentChanges())
+            // There is no rescue profile in the native engine. Do not claim a safe
+            // restart or show its notice; surface the failure and let the user start again.
             val outcome = SafePolicy.onFailure(safeState, strikes, f, autoSafe(),
                 AppStrings.get(app, R.string.safe_probation_failed), AppStrings.get(app, R.string.safe_auto_started))
+                .let { if (it.restartSafe) it.copy(state = SafeState.OFF, restartSafe = false, notice = null, reason = null) else it }
             val now = SystemClock.elapsedRealtime()
             val delay = SafePolicy.autoRestartDelay(f.kind, code, readyAt?.let { now - it }, autoRestarts.toList(), now)
             if (!outcome.restartSafe && delay != null && DshService.isRunning) {
@@ -1064,7 +1020,7 @@ class RuntimeController private constructor(private val app: Context) : DshProce
             } else {
                 phase = Phase.INSTALLED
                 try {
-                    start(pendingEnv, pendingPhoneStorage)
+                    start(pendingEnv)
                 } catch (e: Exception) {
                     log("[dsh-app] could not restart $how: ${e.message}", "system")
                     setPhase(Phase.ERROR)
@@ -1102,9 +1058,6 @@ class RuntimeController private constructor(private val app: Context) : DshProce
         private const val K_MOVED = "movedAside"
         private const val K_AUTO_SAFE = "autoSafe"
         private const val K_WORKSPACE_RECOVERY = "workspaceRecovery"
-        private const val K_DIRECT_ENGINE = "directEngine"
-        /** Runtime version Direct failed to launch with (see [SafePolicy.directLaunchFailed]). */
-        private const val K_DIRECT_FAILED = "directEngineFailedRuntime"
         private const val MAIN_FAILURE_LOG = "failure-normal.log"
         private const val LATEST_FAILURE_LOG = "failure-latest.log"
 

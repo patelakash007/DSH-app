@@ -15,7 +15,7 @@ From the repository root:
 ```sh
 node sdk/plugin-kit/bin/check.mjs examples/plugins/dsh-go-example-files
 node --test examples/plugins/dsh-go-example-files/test/*.test.js
-node --test runtime/tests/native-files.test.mjs
+node --test test/files.test.mjs
 ```
 
 The last command runs real HTTP/WebSocket through production bridge routes and this example's handler, without requiring a DSH engine. System chooser UI and remote devices still need device verification; see the [author guide](../../../docs/plugins/en/files.md).

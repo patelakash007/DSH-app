@@ -11,9 +11,9 @@ class LaunchDiagnostics {
     @Volatile var failureReason: String? = null
         private set
 
-    fun selected(direct: Boolean, fallback: String?) {
-        selectedMode = if (direct) "direct" else "proot"
-        fallbackReason = fallback
+    fun selected(@Suppress("UNUSED_PARAMETER") direct: Boolean, @Suppress("UNUSED_PARAMETER") fallback: String?) {
+        // One launch path only; the field is retained for the Flutter status UI.
+        selectedMode = "native"
     }
 
     fun spawned() { spawned = true }

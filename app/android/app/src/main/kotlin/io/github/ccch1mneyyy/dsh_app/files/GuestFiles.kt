@@ -1,77 +1,64 @@
 package io.github.ccch1mneyyy.dsh_app.files
 
 import android.content.Context
+import io.github.ccch1mneyyy.dsh_app.runtime.NativeRuntimePaths
 import io.github.ccch1mneyyy.dsh_app.runtime.PhoneStorage
 import java.io.File
-import java.nio.file.Files
-import java.nio.file.LinkOption
 
 /**
- * Where a path of the local Linux environment lives on Android.
+ * Where a path reported by the engine lives on Android.
  *
- * proot maps the guest root onto the rootfs (`filesDir/runtime/rootfs`, see
- * RuntimeInstaller) and, with phone storage on, binds the shared storage at
- * `/sdcard` and `/storage` (PhoneStorage.binds). Symlinks usually hold guest
- * targets (`/usr/lib/…`), but `--link2symlink` uses host-absolute targets in
- * the rootfs's `/root/.l2s`. Rebase those targets before following each link
- * in the guest world, not by Android.
+ * The native engine keeps the same homes the agent already knows as guest
+ * paths, but directly under the app's files directory:
+ *
+ *   /root/.dsh      -> filesDir/dsh_home
+ *   /root/.agents   -> filesDir/agents_home
+ *   /root/workspace -> filesDir/dsh_home/workspace
+ *   /sdcard         -> the app's shared-storage root
+ *
+ * A path that is already an app-private host path is accepted too. Resolution
+ * is confined to these roots and only returns readable regular files.
  */
 object GuestFiles {
-    private const val MAX_LINKS = 16
+    private data class Root(val guest: String, val host: File)
 
-    fun rootfs(context: Context): File = File(context.filesDir, "runtime/rootfs")
+    /** Host file for an absolute engine [path]; null when it is not a readable regular file. */
+    fun resolve(context: Context, path: String): File? = resolve(context, NativeRuntimePaths.of(context), path, File(PhoneStorage.hostRoot()))
 
-    /** Host file for an absolute guest [path]; null when it is not a readable regular file. */
-    fun resolve(context: Context, path: String): File? =
-        resolve(rootfs(context), path, PhoneStorage.hostRoot())
-
-    internal fun resolve(rootfs: File, path: String, phoneRoot: String): File? {
+    internal fun resolve(context: Context, paths: NativeRuntimePaths, path: String, phoneRoot: File): File? {
         if (!path.startsWith("/")) return null
-        val rootPaths = listOf(rootfs.absolutePath, rootfs.canonicalPath)
-        val pending = ArrayDeque(segments(path))
-        val resolved = ArrayList<String>()
-        var links = 0
-        while (pending.isNotEmpty()) {
-            val segment = pending.removeFirst()
-            when (segment) {
-                "", "." -> continue
-                ".." -> { if (resolved.isNotEmpty()) resolved.removeAt(resolved.size - 1); continue }
-            }
-            resolved += segment
-            val host = hostOf(rootfs, resolved, phoneRoot)
-            val nio = host.toPath()
-            if (!Files.isSymbolicLink(nio)) continue
-            if (++links > MAX_LINKS) return null
-            var target = try { Files.readSymbolicLink(nio).toString() } catch (_: Exception) { return null }
-            resolved.removeAt(resolved.size - 1)
-            if (target.startsWith("/")) {
-                val root = rootPaths.firstOrNull { target == it || target.startsWith("$it/") }
-                if (root != null) {
-                    // PRoot l2s links name the host rootfs, not another guest /data/... path.
-                    target = target.removePrefix(root)
-                } else if (target.startsWith(phoneRoot)) {
-                    val rest = pending.joinToString("/")
-                    val file = if (rest.isEmpty()) File(target) else File(target, rest)
-                    return file.takeIf { it.isFile && it.canRead() }
-                }
-                resolved.clear()
-            }
-            segments(target).reversed().forEach { pending.addFirst(it) }
+        val roots = listOf(
+            Root("/root/.dsh", paths.home),
+            Root("/root/.agents", paths.agentsHome),
+            Root("/root/workspace", paths.workspaceRoot),
+            Root(PhoneStorage.GUEST_PATH, phoneRoot),
+            Root("/storage/emulated/0", phoneRoot),
+        )
+        val match = roots.filter { path == it.guest || path.startsWith(it.guest + "/") }
+            .maxByOrNull { it.guest.length }
+        if (match != null) {
+            val relative = path.removePrefix(match.guest).removePrefix("/")
+            return confined(match.host, relative)
         }
-        val file = hostOf(rootfs, resolved, phoneRoot)
-        return file.takeIf { Files.isRegularFile(it.toPath(), LinkOption.NOFOLLOW_LINKS) && it.canRead() }
+        // Native engine messages may already name the app-private file directly.
+        return directHost(context, path)
     }
 
-    /** Host path of resolved guest [segments] (no symlinks left to follow in them). */
-    private fun hostOf(rootfs: File, segments: List<String>, phoneRoot: String): File {
-        val guest = "/" + segments.joinToString("/")
-        val phone = PhoneStorage.GUEST_PATH
-        return when {
-            guest == phone || guest.startsWith("$phone/") -> File(phoneRoot + guest.removePrefix(phone))
-            guest == "/storage" || guest.startsWith("/storage/") -> File(guest)
-            else -> File(rootfs, guest.removePrefix("/"))
-        }
+    private fun directHost(context: Context, path: String): File? = try {
+        val base = context.filesDir.canonicalFile
+        val target = File(path).canonicalFile
+        target.takeIf { it.path.startsWith(base.path + File.separator) && it.isFile && it.canRead() }
+    } catch (_: Exception) {
+        null
     }
 
-    private fun segments(path: String): List<String> = path.split('/').filter { it.isNotEmpty() }
+    /** [relative] under [root], refusing anything that canonicalizes outside it. */
+    private fun confined(root: File, relative: String): File? = try {
+        val base = root.canonicalFile
+        val target = File(base, relative.removePrefix("/")).canonicalFile
+        val inside = target == base || target.path.startsWith(base.path + File.separator)
+        target.takeIf { inside && it.isFile && it.canRead() }
+    } catch (_: Exception) {
+        null
+    }
 }

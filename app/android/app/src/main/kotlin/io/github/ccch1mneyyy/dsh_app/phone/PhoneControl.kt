@@ -49,7 +49,7 @@ import java.util.concurrent.TimeUnit
  * bridge's lifecycle around the engine (started before DSH launches, stopped when it exits, never
  * in safe mode), the [PhoneEnv] the core runs against, the task's status line, the screen-off
  * stop, and the status pushed to Flutter. [io.github.ccch1mneyyy.dsh_app.runtime.RuntimeController]
- * calls [prepareLaunch] / [launched] / [onEngineReady] / [onEngineStopped].
+ * calls [prepareLaunch] / [onEngineReady] / [onEngineStopped].
  */
 class PhoneControl private constructor(private val app: Context) : PhoneEnv, ControlListener {
     private val prefs = app.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
@@ -311,7 +311,6 @@ class PhoneControl private constructor(private val app: Context) : PhoneEnv, Con
     }
 
     @Volatile private var logger: (String) -> Unit = {}
-    @Volatile private var rootfs: File? = null
     @Volatile private var lastStatus: Map<String, Any?>? = null
     // Only the process-lifetime ticker capture lane reads or increments this value.
     private var statusRevision = 0L
@@ -428,72 +427,27 @@ class PhoneControl private constructor(private val app: Context) : PhoneEnv, Con
      * the bridge and returns true (the launch then adds the `--patch` overlay). Otherwise makes
      * sure nothing is listening and returns false: DSH mounts no phone tools at all.
      */
-    fun prepareLaunch(rootfs: File, safe: Boolean, log: (String) -> Unit): Boolean {
+    fun prepareLaunch(safe: Boolean, log: (String) -> Unit): Boolean {
         logger = log
         tasks.invalidateOwners()
         skillLifecycle.retired()
         stopBridge()
         sessions.beginCallerLaunch()
-        this.rootfs = rootfs
         if (!isEnabled() || safe) {
-            PhoneGuest.clearConfig(rootfs)
             if (isEnabled()) log("[dsh-app] phone control stays off in safe mode")
             emitStatus()
             return false
         }
-        return try {
-            PhoneGuest.writeFiles(rootfs)
-            tasks.clearStop()
-            skillLifecycle.launched()
-            val ep = bridge.start(withTcp = prefs.getBoolean(K_TCP_FALLBACK, false))
-            PhoneGuest.writeConfig(rootfs, ep)
-            refreshScreenOff()
-            emitStatus()
-            true
-        } catch (e: Exception) {
-            log("[dsh-app] phone control: setup failed (${e.message}); starting without phone tools")
-            skillLifecycle.retired()
-            stopBridge()
-            false
-        }
-    }
-
-    /** After the launch command was built: [mounted] false means this runtime's template had no `dsh web` to add the overlay to. */
-    fun launched(mounted: Boolean) {
-        if (mounted) return
-        skillLifecycle.retired()
-        logger("[dsh-app] phone control: this runtime's launch command has no `dsh web` to add the phone overlay to; phone tools are off")
-        stopBridge()
-    }
-
-    /**
-     * DSH printed its login line, so every plugin (including the MCP client's first connection)
-     * has loaded. No authenticated connection 5 s later means the guest couldn't reach the abstract socket:
-     * open the loopback fallback now (the client's reconnect re-reads bridge.json) and keep it on
-     * for later launches.
-     */
-    fun onEngineReady() {
-        // Grace period: the client's first connection normally lands before the login line anyway.
-        ticker.schedule({ checkReached() }, 5, TimeUnit.SECONDS)
-    }
-
-    private fun checkReached() {
-        if (!bridge.listening || bridge.authenticatedConnections > 0) return
-        val ep = bridge.endpoint ?: return
-        if (ep.tcpPort != null) {
-            logger("[dsh-app] phone control: DSH did not connect to the phone bridge (unix socket nor loopback)")
-            return
-        }
-        logger("[dsh-app] phone control: DSH did not reach the unix socket; adding the loopback fallback")
-        try {
-            val next = bridge.addTcp() ?: return
-            rootfs?.let { PhoneGuest.writeConfig(it, next) }
-            prefs.edit().putBoolean(K_TCP_FALLBACK, true).apply()
-        } catch (e: Exception) {
-            logger("[dsh-app] phone control: loopback fallback failed: ${e.message}")
-        }
+        // The Go engine has no phone-bridge transport in this build. The Kotlin
+        // bridge and tool catalog remain ready, but no Node relay or `--patch`
+        // overlay is mounted: the model must not be promised tools that cannot run.
+        log("[dsh-app] phone control: native phone transport is not available; phone tools stay off")
         emitStatus()
+        return false
     }
+
+    /** The native engine has no phone transport in this build; nothing to probe. */
+    fun onEngineReady() = Unit
 
     fun onEngineStopped() {
         tasks.invalidateOwners()
@@ -513,7 +467,6 @@ class PhoneControl private constructor(private val app: Context) : PhoneEnv, Con
         displaySelection.clear()
         PhoneRegistry.overlayGate?.clearStatus { /* Stale displayed status only. */ }
         core.worker.retire()
-        rootfs?.let { PhoneGuest.clearConfig(it) }
         refreshScreenOff()
     }
 

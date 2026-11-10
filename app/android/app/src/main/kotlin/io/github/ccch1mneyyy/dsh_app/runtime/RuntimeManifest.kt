@@ -21,7 +21,7 @@ data class RuntimeManifest(
     val uncompressedBytes: Long,
     val dshVersion: String,
     val nodeVersion: String,
-    /** proot argv template; placeholders are expanded by [LaunchSpec]. */
+    /** Optional extra engine arguments from the manifest (empty for the native manifest). */
     val launchArgv: List<String>,
     val launchEnv: Map<String, String>,
     val raw: JSONObject,
@@ -58,7 +58,7 @@ data class RuntimeManifest(
             return RuntimeManifest(
                 runtimeVersion = json.getString("runtimeVersion"),
                 abi = json.optString("abi"),
-                rootfsAsset = json.getString("rootfs"),
+                rootfsAsset = json.optString("rootfs"),
                 rootfsBytes = json.optLong("rootfsBytes", -1L),
                 rootfsSha256 = json.optString("rootfsSha256").ifEmpty { null },
                 uncompressedBytes = json.optLong("uncompressedBytes", -1L),

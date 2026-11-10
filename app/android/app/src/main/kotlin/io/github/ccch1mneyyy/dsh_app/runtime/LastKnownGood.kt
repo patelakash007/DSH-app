@@ -75,8 +75,8 @@ data class LkgPlan(
 }
 
 /**
- * The last good plugin set of profile `web`, kept outside the rootfs in
- * `filesDir/runtime/lkg/lkg.json` and recorded after each healthy two-minute normal run.
+ * The last good plugin set of profile `web`, kept outside the engine home in
+ * `filesDir/native/lkg/lkg.json` and recorded after each healthy two-minute normal run.
  */
 object LastKnownGood {
     class Record(val at: Long, val snapshot: ProfileSnapshot)

@@ -1,6 +1,6 @@
 # DSH Contract Gates
 
-Authoritative sources: `runtime/bridge/dsh-go-bridge/` (HTTP routes), `packages/dsh_client` public API, `app/lib/state` capabilities, `runtime/patches/pins.json`, `app/lib/l10n/parts/*.arb`, `sdk/plugin-kit`, and CONTRIBUTING.md. Contract changes lacking backward compatibility, migrations, or tests are rejected by default.
+Authoritative sources: the pinned Go engine (`DSH-go-rewrite`) HTTP routes, `packages/dsh_client` public API, `app/lib/state` capabilities, `app/lib/l10n/parts/*.arb`, `sdk/plugin-kit`, and CONTRIBUTING.md. Contract changes lacking backward compatibility, migrations, or tests are rejected by default.
 
 ## Gate 1 | Bridge HTTP Contract
 `/dsh-go/v1/*` routes: paths, methods, auth rejection, status codes, JSON payload shapes, version fields, and error codes (`unavailable`, etc.).
@@ -13,7 +13,7 @@ Blocker: Modifying route/shape/error codes unilaterally on one side without upda
 Host capabilities (e.g. session deletion) must distinguish `unknown` / `supported` / `unsupported`. Disconnected state or unready mux must remain `unknown` rather than collapsed to `false`. Re-probe when mux becomes ready.
 
 ## Gate 4 | Runtime Patches & Pins
-`runtime/patches/` patches must match `pins.json`. Patches must apply cleanly across engine target versions with accompanying regression test coverage.
+The revision in `native-engine.lock.json` must match the packaged `libdsh.so` and its manifest hash; engine changes ship with contract tests.
 
 ## Gate 5 | Localization & Documentation
 `app/lib/l10n/parts/*.arb` must be valid (`l10n_merge.py --check`); `docs/guide/` synchronized with in-app skills (`guide_sync.py --check`); documentation maintained in clean English.

@@ -105,10 +105,11 @@ void _environment(StringBuffer b, DiagnosticsSnapshot s) {
       '${st.strikes > 0 ? ' · 连续失败 ${st.strikes}' : ''}',
     )
     ..writeln(
-      '- 版本：内置 ${_short(st.bundledVersion)} · 已装 ${_short(st.installedVersion)} · DSH ${st.dshVersion ?? '—'} · Node ${st.nodeVersion ?? '—'}',
+      '- 版本：内置 ${_short(st.bundledVersion)} · 已装 ${_short(st.installedVersion)} · DSH ${st.dshVersion ?? '—'}'
+      '${st.nodeVersion == null ? '' : ' · Node ${st.nodeVersion}'}',
     )
     ..writeln(
-      '- 启动方式：${st.currentExecutionMode ?? st.launchSelectedMode ?? (st.directEngineEnabled ? 'direct（未观测）' : 'proot')}'
+      '- 启动方式：${st.currentExecutionMode ?? st.launchSelectedMode ?? 'native'}（原生 Go 引擎）'
       '${st.launchFailureReason == null ? '' : ' · 最近失败 ${st.launchFailureReason}'}'
       '${st.directEngineFallbackReason == null ? '' : ' · 回退 ${st.directEngineFallbackReason}'}',
     )

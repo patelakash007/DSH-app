@@ -43,7 +43,7 @@ final uiLocalKicksProvider = Provider<Stream<void>>((ref) {
   return kicks.stream;
 });
 
-/// The on-device rootfs (guest `/`), or null before the runtime is installed.
+/// The native homes exposed at guest `/` paths, or null before install.
 typedef UiRootfsResolver = Future<Directory?> Function();
 
 final uiRootfsResolverProvider = Provider<UiRootfsResolver>(
@@ -57,7 +57,7 @@ typedef UiConfigSourceBuilder = UiConfigSource? Function(Ref ref, HostRef host);
 
 final uiConfigSourceBuilderProvider = Provider<UiConfigSourceBuilder>((ref) => defaultUiConfigSource);
 
-/// Local: the rootfs file, looked at again on resumes and runtime changes.
+/// Local: `$DSH_HOME/dsh-go/ui.json`, looked at again on resumes and runtime changes.
 /// Remote: only the active host's, over its open connection.
 UiConfigSource? defaultUiConfigSource(Ref ref, HostRef host) {
   if (host.isLocal) {

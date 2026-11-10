@@ -1,189 +1,148 @@
 package io.github.ccch1mneyyy.dsh_app.runtime
 
-import io.github.ccch1mneyyy.dsh_app.i18n.AppStrings
-import io.github.ccch1mneyyy.dsh_app.R
 import android.content.Context
-import android.content.res.AssetManager
 import java.io.File
-import java.nio.channels.FileChannel
 import java.nio.file.Files
-import java.nio.file.StandardOpenOption
-import java.security.DigestInputStream
-import java.security.MessageDigest
-import org.json.JSONObject
 
 /**
- * Unpacks the bundled rootfs into app-private storage.
+ * Prepares and resets the standalone native runtime.
  *
- * Layout under filesDir/runtime:
- *   rootfs/            the active Linux root (proot -r)
- *   rootfs.version     runtimeVersion of the active rootfs
- *   staging/           in-progress extraction, swapped in atomically when done
- *   home.carry/        the user's /root while an upgrade swaps rootfs (see [activateRootfs])
- *   keep.trash/        fresh copies a restore of kept files replaced (see [restoreKept])
- * and next to it, for a reset (see [retireRuntime]):
- *   runtime.reset/     the runtime being deleted
- *   runtime-keep/      what the reset keeps, mirrored under rootfs paths, until the next install
+ * There is nothing to extract: the Go engine ships as `libdsh.so` inside the
+ * APK, and install only verifies its provenance and records the engine
+ * version. [reset] clears the native home / agents home while preserving the
+ * small user-owned set the UI asks to keep.
  *
- * First install creates the system; upgrades replace only app-owned engine paths.
- * The user's Linux system, package databases and home are never rebuilt implicitly.
+ * Layout under filesDir:
+ *   dsh_home/          the engine's --home (SQLite stores, settings, skills)
+ *   agents_home/       the engine's AGENTS_HOME
+ *   dsh_home/workspace the engine's workspace (inside --home)
+ *   native/runtime.version  the installed engine version marker
  */
 class RuntimeInstaller(
     private val context: Context,
     private val manifest: RuntimeManifest,
     private val onLog: (String) -> Unit,
-    private val sync: () -> Unit = ::syncFilesystems,
 ) {
-    val baseDir = File(context.filesDir, "runtime")
-    val rootfs = File(baseDir, "rootfs")
-    private val versionFile = File(baseDir, "rootfs.version")
-    private val staging = File(baseDir, "staging")
-    private val retiredDir = File(context.filesDir, "runtime.reset")
-    private val keepDir = File(context.filesDir, "runtime-keep")
+    private val paths = NativeRuntimePaths.of(context)
 
-    private val engineUpgrade = EngineUpgrade(baseDir, sync)
+    /** Native home the engine runs with; also the root for user skills and drafts. */
+    val home: File = paths.home
 
-    fun installedVersion(): String? {
-        val nativeBinary = File(context.applicationInfo.nativeLibraryDir, "libdsh.so")
-        if (nativeBinary.exists()) return manifest.runtimeVersion
-        return if (!engineUpgrade.isPending() && rootfs.isDirectory && versionFile.isFile) versionFile.readText().trim().ifEmpty { null } else null
+    /** The UI-facing version; the marker also carries the pinned engine revision. */
+    fun installedVersion(): String? = marker()?.substringBefore(' ')
+
+    /**
+     * A bundled engine is current only when both the runtime version and the
+     * pinned source revision match the marker written at install. An APK that
+     * ships a rebuilt engine with the same version string therefore re-verifies
+     * instead of reusing a stale marker forever.
+     */
+    fun isCurrent(): Boolean {
+        if (!nativeBinary().isFile) return false
+        val parts = marker()?.split(' ', limit = 2) ?: return false
+        if (parts[0] != manifest.runtimeVersion) return false
+        // Markers written before the revision was recorded stay valid; launch
+        // still verifies the binary hash before executing it.
+        val markerRevision = parts.getOrNull(1)
+        return markerRevision == null || markerRevision == (manifest.engine?.revision ?: "")
     }
 
-    fun isCurrent(): Boolean {
-        val nativeBinary = File(context.applicationInfo.nativeLibraryDir, "libdsh.so")
-        if (nativeBinary.exists()) return true
-        return installedVersion() == manifest.runtimeVersion
+    private fun marker(): String? = try {
+        paths.versionFile.takeIf { it.isFile }?.readText()?.trim()?.ifEmpty { null }
+    } catch (_: Exception) {
+        null
     }
 
     /**
-     * Extracts the bundled rootfs; [onProgress] gets (compressedBytesRead, totalCompressedBytes).
-     * Fails with [KeepFailed] when what a reset kept cannot go back; [dropKept] then gives up
-     * whatever cannot and installs anyway.
+     * Verifies the bundled engine against the manifest and marks the runtime
+     * installed. [dropKept] is retained for the plugin-channel contract; a
+     * native reset never leaves anything staged, so it has no effect.
      */
-    fun install(dropKept: Boolean = false, onProgress: (Long, Long) -> Unit) {
-        val nativeBinary = File(context.applicationInfo.nativeLibraryDir, "libdsh.so")
-        if (nativeBinary.exists()) {
-            manifest.engine?.verify(nativeBinary)
-            val paths = NativeRuntimePaths.of(context).prepare()
-            paths.versionFile.parentFile?.mkdirs()
-            paths.versionFile.writeText(manifest.runtimeVersion)
-            onProgress(100, 100)
-            return
-        }
-        // A reset killed halfway finishes first, so what it keeps is in runtime-keep for the restore.
-        settleReset(retiredDir, keepDir, dropKept)
-        baseDir.mkdirs()
-        // The transaction owns its payload outside staging. Finish it before any
-        // cleanup, including when a different APK resumes this install.
-        engineUpgrade.recover()
-        staging.deleteRecursivelySafely()
-        checkFreeSpace()
-        staging.mkdirs()
-
-        val assetPath = "${RuntimeManifest.ASSET_DIR}/${manifest.rootfsAsset}"
-        val assetBytes = assetLength(assetPath)
-        val total = assetBytes.takeIf { it > 0 } ?: manifest.rootfsBytes
-        var lastReported = 0L
-        val progress: (Long) -> Unit = { read ->
-            if (read - lastReported >= 512 * 1024 || read == total) {
-                lastReported = read
-                onProgress(read, total)
-            }
-        }
-        timed("verify") {
-            // Parallel readers revisit compressed bytes; hash the asset once, in order.
-            val digest = MessageDigest.getInstance("SHA-256")
-            DigestInputStream(context.assets.open(assetPath, AssetManager.ACCESS_STREAMING), digest).use { input ->
-                val buffer = ByteArray(1 shl 16)
-                while (input.read(buffer) >= 0) {}
-            }
-            val actual = digest.digest().joinToString("") { "%02x".format(it) }
-            val expected = manifest.rootfsSha256
-            if (expected != null && !expected.equals(actual, ignoreCase = true)) {
-                staging.deleteRecursivelySafely()
-                throw IllegalStateException(AppStrings.get(context, R.string.service_package_checksum_failed))
-            }
-        }
-        timed("extract") {
-            val extractor = TarExtractor(staging, progress)
-            if (manifest.rootfsAsset.endsWith(".xz") && assetBytes > 0) {
-                val decoded = ParallelXZInputStream.open(
-                    { AssetSeekableInputStream(context.assets.openFd(assetPath)) }, progress,
-                )
-                extractor.extractDecoded(decoded)
-            } else {
-                context.assets.open(assetPath, AssetManager.ACCESS_STREAMING).use { raw ->
-                    extractor.extract(raw, manifest.rootfsAsset)
-                }
-            }
-        }
-        onProgress(total, total)
-
-        val groupNames = appendAndroidGroupNames(staging,
-            runCatching { File("/proc/self/task/${android.os.Process.myTid()}/status").readText() }.getOrNull())
-        onLog("[dsh-app] install group names: " +
-            (groupNames.skipped?.let { "skipped ($it)" } ?: "added ${groupNames.added}"))
-
-        timed("activate") {
-            activateRuntimeUpdate(baseDir, manifest.runtimeVersion, manifest.abi, manifest.raw,
-                keepDir, dropKept, sync = { timed("sync") { sync() } }, onLog = onLog)
-        }
+    fun install(@Suppress("UNUSED_PARAMETER") dropKept: Boolean = false, onProgress: (Long, Long) -> Unit) {
+        val binary = nativeBinary()
+        check(binary.isFile) { "native engine is missing from this APK" }
+        val engine = manifest.engine ?: throw IllegalStateException("runtime manifest has no engine provenance")
+        engine.verify(binary)
+        paths.prepare()
+        paths.versionFile.parentFile?.mkdirs()
+        paths.versionFile.writeText("${manifest.runtimeVersion} ${engine.revision}")
+        onLog("[dsh-app] native engine ready (${manifest.runtimeVersion}, ${manifest.abi})")
+        onProgress(100, 100)
     }
 
-    private inline fun <T> timed(phase: String, block: () -> T): T {
-        val started = System.nanoTime()
-        try {
-            return block()
-        } finally {
-            onLog("[dsh-app] install $phase: ${(System.nanoTime() - started) / 1_000_000} ms")
-        }
-    }
-
-    private fun checkFreeSpace() {
-        val need = (manifest.uncompressedBytes.takeIf { it > 0 } ?: 600L * 1024 * 1024) * 115 / 100
-        val free = context.filesDir.usableSpace
-        if (free < need) {
-            val mb = { b: Long -> b / (1024 * 1024) }
-            throw IllegalStateException(AppStrings.get(context, R.string.service_storage_insufficient, mb(need), mb(free)))
-        }
-    }
-
-    /** Deletes the runtime; [keep] (paths under the rootfs) waits in runtime-keep for the next install. */
+    /** Deletes the native stores, keeping the paths the UI asked to preserve. */
     fun reset(keep: List<String>) {
-        retireRuntime(baseDir, retiredDir, keepDir, keep)
+        val preserved = mutableListOf<Pair<File, File>>()
+        val staging = File(context.cacheDir, "native-reset-keep").apply { deleteRecursivelySafely() }
+        try {
+            for (rel in ResetKeep.ALL) {
+                if (rel !in keep) continue
+                val source = nativePathOf(rel) ?: continue
+                if (!source.present()) continue
+                val saved = File(staging, rel)
+                saved.parentFile?.mkdirs()
+                if (!source.renameTo(saved)) {
+                    // Do not delete the home after a kept file failed to move: restore
+                    // what already moved and leave the runtime intact for a retry.
+                    preserved.forEach { (kept, target) ->
+                        target.parentFile?.mkdirs()
+                        kept.renameTo(target)
+                    }
+                    throw IllegalStateException("could not preserve ${source.name}")
+                }
+                preserved += saved to source
+            }
+            // The marker lives outside the home. Clear it first: a failure here must
+            // not leave the app trusting a home that reset is about to delete.
+            check(!paths.versionFile.exists() || paths.versionFile.delete()) { "could not clear the runtime marker" }
+            paths.home.deleteRecursivelySafely()
+            paths.agentsHome.deleteRecursivelySafely()
+            // Workspace files used to live outside the home in early native builds.
+            File(context.filesDir, "workspaces").deleteRecursivelySafely()
+            paths.prepare()
+            for ((saved, target) in preserved) {
+                target.parentFile?.mkdirs()
+                check(saved.renameTo(target)) { "could not restore ${target.name}" }
+            }
+        } finally {
+            staging.deleteRecursivelySafely()
+        }
     }
 
-    private fun assetLength(path: String): Long = try {
-        context.assets.openFd(path).use { it.length }
-    } catch (_: Exception) {
-        -1L // compressed asset; fall back to the manifest
+    private fun nativeBinary(): File = File(context.applicationInfo.nativeLibraryDir, "libdsh.so")
+
+    /** Maps the legacy keep identifiers (kept stable for the Dart channel) to native paths. */
+    private fun nativePathOf(rel: String): File? = when (rel) {
+        "root/.dsh/dsh-go" -> File(paths.home, "dsh-go")
+        "root/.dsh/skills" -> File(paths.home, "skills")
+        "root/.agents/skills" -> File(paths.agentsHome, "skills")
+        // The native engine's settings and its key/value store (account, credentials
+        // and provider state). The Cordis profile files below do not exist natively.
+        "root/.dsh/native-settings.json" -> File(paths.home, "native-settings.json")
+        "root/.dsh/kv.db" -> File(paths.home, "kv.db")
+        else -> null
     }
 }
 
-/** The production activation route, also exercised without an Android Context in JVM tests. */
-internal fun activateRuntimeUpdate(
-    base: File,
-    version: String,
-    abi: String,
-    raw: JSONObject,
-    keep: File? = null,
-    dropKept: Boolean = false,
-    sync: () -> Unit,
-    onLog: (String) -> Unit = {},
-) {
-    val rootfs = File(base, "rootfs")
-    if (File(base, "home.carry").exists() || File(base, "rootfs.old").exists()) {
-        throw RuntimeUpgradeBlocked("legacy_interrupted")
-    }
-    if (Files.exists(rootfs.toPath(), java.nio.file.LinkOption.NOFOLLOW_LINKS)) {
-        val spec = checkEngineCompatibility(base, raw, version, abi)
-        onLog("[dsh-app] upgrading engine; preserving installed Linux system and user tools")
-        EngineUpgrade(base, sync).activate(version, spec)
-        File(base, "staging").deleteRecursivelySafely()
-    } else {
-        // Only first install (or an explicit user-confirmed reset) may activate
-        // an entire rootfs. Never use this as an incompatible-upgrade fallback.
-        activateRootfs(base, version, keep, dropKept, sync = sync)
+/** The runtime cannot be changed while it is running or mid-recovery. */
+internal class RuntimeUpgradeBlocked(reason: String) : IllegalStateException("runtime_upgrade_blocked:$reason")
+
+/**
+ * Paths a reset can keep. The wire names and path identifiers are part of the
+ * Flutter channel contract; [RuntimeInstaller.reset] maps them onto native
+ * storage.
+ */
+enum class ResetKeep(val wire: String, val paths: List<String>) {
+    UI_AND_SKILLS("uiAndSkills", listOf("root/.dsh/dsh-go", "root/.dsh/skills", "root/.agents/skills")),
+    // The native engine has no Cordis profiles; its settings layer is native-settings.json
+    // and its key/value store holds account and provider state. Keep both when asked to
+    // keep settings, instead of pretending to keep files that do not exist.
+    PLUGINS_AND_SETTINGS("pluginsAndSettings", listOf("root/.dsh/native-settings.json", "root/.dsh/kv.db"));
+
+    companion object {
+        val ALL: List<String> = entries.flatMap { it.paths }
+
+        fun fromWire(names: Collection<String>): Set<ResetKeep> = entries.filterTo(LinkedHashSet()) { it.wire in names }
     }
 }
 
@@ -210,187 +169,3 @@ private fun File.isSymlink(): Boolean = try {
 
 /** Exists, counting a symlink whose target is gone. */
 private fun File.present(): Boolean = exists() || isSymlink()
-
-/**
- * Swaps `staging` in as `rootfs` and moves the user's /root over. The home waits in `home.carry`,
- * never in `staging` (which every install wipes first), so an upgrade killed at any step loses
- * nothing: the next install picks up from what is on disk.
- */
-internal fun activateRootfs(
-    base: File,
-    version: String,
-    keep: File? = null,
-    dropKept: Boolean = false,
-    sync: () -> Unit,
-    syncDirectory: (File) -> Unit = ::syncDirectory,
-) {
-    val rootfs = File(base, "rootfs")
-    val staging = File(base, "staging")
-    val retired = File(base, "rootfs.old")
-    val carry = File(base, "home.carry")
-    val home = File(rootfs, "root")
-    val versionFile = File(base, "rootfs.version")
-    // A retry may install the same version. Retire its ready marker before replacing any tree.
-    if (Files.deleteIfExists(versionFile.toPath())) syncDirectory(base)
-    // /opt is replaced below. Remember old direct use with the carried home so
-    // saved physical cwd paths remain readable after upgrading in PRoot mode.
-    DirectLaunch.preservePhysicalAlias(rootfs, if (carry.exists()) carry else home, retired)
-    if (!carry.exists() && home.isDirectory && !home.renameTo(carry)) {
-        throw IllegalStateException("could not keep the user's home")
-    }
-    retired.deleteRecursivelySafely()
-    if (rootfs.exists() && !rootfs.renameTo(retired)) rootfs.deleteRecursivelySafely()
-    if (!staging.renameTo(rootfs)) throw IllegalStateException("could not activate rootfs")
-    if (carry.exists()) {
-        home.deleteRecursivelySafely()
-        if (!carry.renameTo(home)) throw IllegalStateException("could not restore the user's home")
-    }
-    listOf("root", "root/workspace", "tmp", "dev", "proc", "sys").forEach { File(rootfs, it).mkdirs() }
-    File(rootfs, "tmp").setWritable(true, false)
-    // Before the version: until everything kept is back, the runtime reads as not installed.
-    if (keep != null) restoreKept(keep, rootfs, dropKept)
-    // Everything the marker vouches for is on disk before it says ready. A marker torn by a
-    // power cut doesn't match the version, so the next start just installs again.
-    sync()
-    versionFile.writeText(version)
-    retired.deleteRecursivelySafely()
-}
-
-internal fun syncDirectory(directory: File) {
-    FileChannel.open(directory.toPath(), StandardOpenOption.READ).use { it.force(true) }
-}
-
-enum class ResetKeep(val wire: String, val paths: List<String>) {
-    /** `$DSH_HOME/dsh-go` (ui.json) and both user skill roots: small, written by the user, harmless. */
-    UI_AND_SKILLS("uiAndSkills", listOf("root/.dsh/dsh-go", "root/.dsh/skills", "root/.agents/skills")),
-
-    /** Installed plugins with their settings, the global settings layer and the home `.env`. */
-    PLUGINS_AND_SETTINGS("pluginsAndSettings", listOf("root/.dsh/profiles", "root/.dsh/cordis.patch.yml", "root/.dsh/.env"));
-
-    companion object {
-        /** Every path a reset can keep; none lies inside another. */
-        val ALL: List<String> = entries.flatMap { it.paths }
-
-        fun fromWire(names: Collection<String>): Set<ResetKeep> = entries.filterTo(LinkedHashSet()) { it.wire in names }
-    }
-}
-
-/** The reset's choice of paths, written into the runtime before it is retired. */
-private const val KEEP_LIST = "reset.keep"
-
-/**
- * What a reset kept could not be moved; nothing is lost, and the install can be retried or told
- * to drop what cannot move. The message starts with `keep:` (the app's failure page looks for it).
- */
-class KeepFailed(rel: String) : IllegalStateException("keep: could not move $rel")
-
-/**
- * Deletes [base] but keeps [paths] of its rootfs in [keep]. The runtime is first renamed to [retired]
- * in one step, so from then on it reads as not installed, and the list of paths goes with it: a reset
- * killed at any point is finished by the next one or by the next install ([settleReset]). Nothing is
- * deleted before what is kept has moved.
- */
-internal fun retireRuntime(base: File, retired: File, keep: File, paths: List<String>) {
-    settleReset(retired, keep)
-    if (!base.exists()) {
-        // Nothing to take from; the choice still applies to what an earlier reset kept.
-        pruneKept(keep, paths)
-        return
-    }
-    val list = File(base, KEEP_LIST)
-    list.writeText(paths.joinToString("\n"))
-    if (!base.renameTo(retired)) {
-        list.delete()
-        throw IllegalStateException("could not retire the runtime")
-    }
-    settleReset(retired, keep)
-}
-
-/**
- * Finishes a retired runtime: moves its listed paths into [keep], then deletes it. A path that
- * [keep] already holds is an earlier reset's, not restored yet (the runtime never got installed),
- * so that copy is the user's and the retired one is a fresh one. If a move fails, the retired
- * runtime stays as it is and the next attempt picks up from there; with [dropFailed] it is deleted
- * with whatever could not move.
- */
-internal fun settleReset(retired: File, keep: File, dropFailed: Boolean = false) {
-    if (!retired.present()) return
-    val list = File(retired, KEEP_LIST)
-    val listed = readKeepList(list)
-    // activateRootfs keeps the authoritative home here until its move back succeeds.
-    // A reset during that interrupted upgrade must not keep the fresh rootfs skeleton.
-    val carry = File(retired, "home.carry")
-    val home = if (carry.exists()) carry else File(retired, "rootfs/root")
-    for (rel in listed.orEmpty()) {
-        val from = File(home, rel.removePrefix("root/"))
-        val to = File(keep, rel)
-        if (!from.present() || to.present()) continue
-        to.parentFile?.mkdirs()
-        if (!from.renameTo(to) && !dropFailed) throw KeepFailed(rel)
-    }
-    // An unreadable list keeps whatever is already kept.
-    if (listed != null) pruneKept(keep, listed)
-    // The list goes first: a delete cut short leaves nothing that a later settle would keep.
-    list.delete()
-    retired.deleteRecursivelySafely()
-}
-
-/** The kept paths, or null when the list is missing; anything that could leave the rootfs is dropped. */
-private fun readKeepList(file: File): List<String>? {
-    if (!file.isFile) return null
-    return file.readLines().map { it.trim() }.filter { it in ResetKeep.ALL }
-}
-
-/** Drops what [keep] holds outside [paths]: the latest reset's choice wins. */
-private fun pruneKept(keep: File, paths: List<String>) {
-    if (!keep.present()) return
-    for (rel in ResetKeep.ALL) if (rel !in paths) File(keep, rel).deleteRecursivelySafely()
-    keep.deleteEmptyDirs()
-}
-
-/**
- * Moves what a reset kept back into the new [rootfs], over the fresh copies (which wait in
- * `keep.trash` until all is back). A failed move puts that path's fresh copy back and throws
- * [KeepFailed]; what is not back yet stays in [keep] for the next install. With [dropFailed] the
- * paths that cannot move are given up instead and [keep] is cleared.
- */
-internal fun restoreKept(keep: File, rootfs: File, dropFailed: Boolean = false) {
-    val dropped = File(keep.parentFile, "${keep.name}.dropped")
-    dropped.deleteRecursivelySafely()
-    if (!keep.present()) return
-    val trash = File(rootfs.parentFile, "keep.trash")
-    trash.deleteRecursivelySafely()
-    for (rel in ResetKeep.ALL) {
-        val kept = File(keep, rel)
-        if (!kept.present()) continue
-        val target = File(rootfs, rel)
-        val aside = File(trash, rel)
-        if (target.present()) {
-            aside.parentFile?.mkdirs()
-            if (!target.renameTo(aside)) {
-                if (dropFailed) continue
-                throw KeepFailed(rel)
-            }
-        }
-        target.parentFile?.mkdirs()
-        if (!kept.renameTo(target)) {
-            if (aside.present()) aside.renameTo(target)
-            if (dropFailed) continue
-            throw KeepFailed(rel)
-        }
-    }
-    trash.deleteRecursivelySafely()
-    if (!dropFailed) {
-        keep.deleteEmptyDirs()
-        return
-    }
-    // Out of the restore's way in one step, then deleted; a delete cut short is retried next time.
-    if (keep.renameTo(dropped)) dropped.deleteRecursivelySafely() else keep.deleteRecursivelySafely()
-}
-
-/** Removes the empty directories of this tree, itself included; files (and symlinks) stay. */
-private fun File.deleteEmptyDirs() {
-    if (isSymlink() || !isDirectory) return
-    listFiles()?.forEach { it.deleteEmptyDirs() }
-    if (list()?.isEmpty() == true) delete()
-}

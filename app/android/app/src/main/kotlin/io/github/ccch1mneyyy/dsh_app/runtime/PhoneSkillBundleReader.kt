@@ -41,12 +41,11 @@ internal object PhoneSkillBundleReader {
         descriptors: Map<String, PhoneSkillRoute.Descriptor>): Read {
         if (!NAME.matches(name)) return Read.Rejected(Reason.NAME)
         return try {
-            val rootPath = root.canonicalFile.toPath()
-            val rawHome = rootPath.resolve("root/.dsh")
-            val home = rawHome.toFile().canonicalFile.toPath()
-            if (!home.startsWith(rootPath) || !Files.isDirectory(rawHome, NOFOLLOW_LINKS)) {
-                return Read.Rejected(Reason.PATH)
-            }
+            // Resolve the guest view's `root/.dsh` symlink before reading; a directory
+            // under the view itself is not the native home on a real install.
+            val rawHome = File(root, "root/.dsh")
+            if (!isValidGuestHome(root, rawHome)) return Read.Rejected(Reason.PATH)
+            val home = rawHome.canonicalFile.toPath()
             val skills = home.resolve("skills")
             val directory = skills.resolve(name)
             if (!Files.isDirectory(skills, NOFOLLOW_LINKS) || !Files.isDirectory(directory, NOFOLLOW_LINKS)) {

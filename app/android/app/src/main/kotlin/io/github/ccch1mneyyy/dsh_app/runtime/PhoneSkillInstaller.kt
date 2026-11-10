@@ -85,9 +85,12 @@ internal object PhoneSkillInstaller {
         var published = false
         try {
             if (!canStage()) return PhoneSkillInstallResult.Refused.STALE
-            val rootPath = root.canonicalFile.toPath()
-            val home = File(root, "root/.dsh").canonicalFile.toPath()
-            if (!home.startsWith(rootPath) || !Files.isDirectory(home)) return PhoneSkillInstallResult.Refused.NO_HOME
+            // [root] is the guest-root view; resolve its one allowed home symlink,
+            // then keep every new path under that canonical home.
+            val rawHome = File(root, "root/.dsh")
+            if (!isValidGuestHome(root, rawHome)) return PhoneSkillInstallResult.Refused.NO_HOME
+            val home = rawHome.canonicalFile.toPath()
+            if (!Files.isDirectory(home)) return PhoneSkillInstallResult.Refused.NO_HOME
             val skills = home.resolve("skills")
             try { Files.createDirectory(skills) } catch (_: FileAlreadyExistsException) {
                 if (!Files.isDirectory(skills, NOFOLLOW_LINKS)) return PhoneSkillInstallResult.Refused.NO_HOME

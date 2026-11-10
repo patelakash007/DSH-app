@@ -333,7 +333,7 @@ class FilesPlugin : FlutterPlugin, ActivityAware, MethodChannel.MethodCallHandle
 
     companion object {
         const val CHANNEL = "dsh/files"
-        /** `Download/DSH-Go`: saved files, and the local engine's output folder (GuestSetup). No
+        /** `Download/DSH-Go`: saved files, and the local engine's output folder. No
          *  space: the agent types this path into shell commands. */
         private const val SUBDIR = "DSH-Go"
         /** The folder before the app was called DSH Go; nothing is written there any more. */

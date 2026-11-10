@@ -12,8 +12,8 @@ Record only executed commands, exit codes, git commit SHAs, and key outputs. Nev
 | `app/` ARB Localization | `python3 app/tool/l10n_merge.py --check` |
 | `packages/dsh_client` | `(cd packages/dsh_client && dart analyze && dart test)` |
 | `packages/dsh_remote` | `(cd packages/dsh_remote && dart analyze && dart test)` |
-| `runtime/bridge` HTTP routes | `node --test runtime/tests/*.test.mjs` |
-| `runtime/patches` | pins sync check, patch cleanliness, node tests |
+| Engine HTTP routes | `native_contract_inventory.py --check` plus the Dart↔Go contract job |
+| Engine revision | `native-engine.lock.json` matches the packaged manifest hash |
 | `sdk/plugin-kit` | `(cd sdk/plugin-kit && npm test)` + `node sdk/plugin-kit/scripts/sync-skill.mjs --check` |
 | `docs/guide/` | `python3 app/tool/guide_sync.py --check` |
 | `tooling/` build scripts | `tooling/build-apk.sh` or targeted test suite `python3 -m unittest discover tooling` |

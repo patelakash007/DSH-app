@@ -23,7 +23,7 @@ import kotlin.concurrent.thread
  * - `info` → `{app: {versionName, versionCode, abi}, device: {manufacturer, brand, model,
  *   android, sdkInt, abis, memoryMb, freeStorageMb, display: {widthPx, heightPx, density,
  *   densityDpi, fontScale}}, manifest: {runtimeVersion, abi,
- *   dshVersion, nodeVersion, pnpmVersion, ubuntuVersion, prootVersion, rootfsBytes,
+ *   dshVersion, nodeVersion, engineBytes, engineRevision, protocolVersion,
  *   uncompressedBytes, files}}` (the bundled runtime's `assets/runtime/manifest.json`).
  * - `engineLog {maxBytes}` → the last lines of the engine's log file (`dsh.log`, and the
  *   rotated `dsh.log.1` before it), which outlives the app process. Lines were already
@@ -130,7 +130,7 @@ class DiagnosticsPlugin : FlutterPlugin, io.flutter.embedding.engine.plugins.act
     }
 
     private fun engineLog(maxBytes: Int): List<String> {
-        val dir = File(context.filesDir, "runtime/logs")
+        val dir = io.github.ccch1mneyyy.dsh_app.runtime.NativeRuntimePaths.of(context).logs
         val current = File(dir, "dsh.log")
         val rotated = File(dir, "dsh.log.1")
         val fromCurrent = tail(current, maxBytes)
@@ -150,16 +150,17 @@ class DiagnosticsPlugin : FlutterPlugin, io.flutter.embedding.engine.plugins.act
             fun str(key: String) = json.optString(key).ifEmpty { null }
             fun long(key: String) = json.optLong(key, -1L).takeIf { it >= 0 }
             val entries = json.optJSONObject("entries")
+            val engine = json.optJSONObject("engine")
             return mapOf(
                 "runtimeVersion" to str("runtimeVersion"),
                 "abi" to str("abi"),
                 "dshVersion" to str("dshVersion"),
-                "nodeVersion" to str("nodeVersion"),
-                "pnpmVersion" to str("pnpmVersion"),
-                "ubuntuVersion" to str("ubuntuVersion"),
-                "prootVersion" to str("prootVersion"),
-                "rootfsBytes" to long("rootfsBytes"),
+                // The native manifest writes "none"; it is not a Node runtime.
+                "nodeVersion" to str("nodeVersion")?.takeIf { it != "none" },
                 "uncompressedBytes" to long("uncompressedBytes"),
+                "engineBytes" to engine?.optLong("bytes", -1L)?.takeIf { it >= 0 },
+                "engineRevision" to engine?.optString("revision")?.takeIf { it.isNotEmpty() },
+                "protocolVersion" to engine?.optString("protocolVersion")?.takeIf { it.isNotEmpty() },
                 "files" to entries?.optLong("file", -1L)?.takeIf { it >= 0 },
             ).filterValues { it != null }
         }

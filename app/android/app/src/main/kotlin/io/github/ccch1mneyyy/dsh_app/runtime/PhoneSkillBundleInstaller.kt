@@ -79,10 +79,11 @@ internal object PhoneSkillBundleInstaller {
         var published = false
         try {
             if (!canStage()) return Result.Refused.STALE
-            val rootPath = root.canonicalFile.toPath()
-            val rawHome = rootPath.resolve("root/.dsh")
-            val home = rawHome.toFile().canonicalFile.toPath()
-            if (!home.startsWith(rootPath) || !Files.isDirectory(rawHome, NOFOLLOW_LINKS)) return Result.Refused.NO_HOME
+            // The controller passes the guest-root view, where `root/.dsh` is a symlink to
+            // the engine home. Resolve it before checking that skills stay under that home.
+            val rawHome = File(root, "root/.dsh")
+            if (!isValidGuestHome(root, rawHome)) return Result.Refused.NO_HOME
+            val home = rawHome.canonicalFile.toPath()
             val skills = home.resolve("skills")
             try { Files.createDirectory(skills) } catch (_: FileAlreadyExistsException) {
                 if (!Files.isDirectory(skills, NOFOLLOW_LINKS)) return Result.Refused.NO_HOME

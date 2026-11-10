@@ -1,8 +1,9 @@
-// The on-device engine's Linux files, read and written from the app for what
-// DSH has no remote method for (user skills and the user's AGENTS.md in a
-// profile share). The guest root is the rootfs under the app's files dir
-// (RuntimeInstaller.kt: `filesDir/runtime/rootfs`); DSH home is `/root/.dsh`.
-// The files are small; IO is synchronous.
+// The on-device engine's files, read and written from the app for what DSH has
+// no remote method for (user skills and the user's AGENTS.md in a profile
+// share). The native engine keeps DSH home at `filesDir/dsh_home`, the agents
+// home at `filesDir/agents_home` and the workspace at `dsh_home/workspace`;
+// this class exposes them at the guest paths the rest of the app and the
+// agent docs already use. The files are small; IO is synchronous.
 
 import 'dart:convert';
 import 'dart:io';
@@ -12,8 +13,8 @@ import 'package:path_provider/path_provider.dart';
 
 import 'share_models.dart';
 
-/// The app-managed global AGENTS.md starts with this (GuestSetup.kt); such a
-/// file is the app's, not the person's.
+/// The app-managed global AGENTS.md starts with this; such a file is the
+/// app's, not the person's.
 const managedAgentsMarker = '<!-- dsh-app:managed';
 
 /// One user skill found on disk.
@@ -47,14 +48,45 @@ class GuestFs {
   /// DSH home's (app-managed) one.
   static const importedAgentsMd = '$agentsHome/AGENTS.md';
 
-  /// The on-device rootfs; null when the runtime isn't installed.
+  /// The native homes exposed at guest paths; null when the runtime isn't installed.
+  ///
+  /// A small symlink view under the app files dir maps `/root/.dsh`,
+  /// `/root/.agents` and `/root/workspace` onto the engine's native paths, so
+  /// every existing reader/writer keeps working with absolute guest paths.
   static Future<GuestFs?> local() async {
     try {
-      final dir = Directory('${(await getApplicationSupportDirectory()).path}/runtime/rootfs');
-      return dir.existsSync() ? GuestFs(dir) : null;
+      final files = await getApplicationSupportDirectory();
+      final home = Directory('${files.path}/dsh_home');
+      if (!home.existsSync()) return null;
+      final view = Directory('${files.path}/native-guest');
+      Directory('${view.path}/root').createSync(recursive: true);
+      _link(Directory('${view.path}/root/.dsh'), home);
+      _link(Directory('${view.path}/root/.agents'), Directory('${files.path}/agents_home'));
+      _link(Directory('${view.path}/root/workspace'), Directory('${home.path}/workspace'));
+      // A device without symlink support must not silently write into the view.
+      final resolved = Directory('${view.path}/root/.dsh').resolveSymbolicLinksSync();
+      if (resolved != home.resolveSymbolicLinksSync()) return null;
+      return GuestFs(view);
     } catch (_) {
       return null;
     }
+  }
+
+  /// Points [link] at [target], leaving a real directory (with its files) alone.
+  static void _link(Directory link, Directory target) {
+    target.createSync(recursive: true);
+    final existing = Link(link.path);
+    if (existing.existsSync()) {
+      try {
+        if (existing.targetSync() == target.path) return;
+        existing.deleteSync();
+      } catch (_) {}
+    } else if (Directory(link.path).existsSync()) {
+      return;
+    }
+    try {
+      existing.createSync(target.path);
+    } catch (_) {}
   }
 
   File file(String guestPath) => File('${root.path}/${guestPath.replaceFirst(RegExp(r'^/+'), '')}');

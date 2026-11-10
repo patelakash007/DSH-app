@@ -20,8 +20,8 @@ The packaging pipeline generates the following release outputs:
 |---|---|---|
 | `app-arm64-release.apk` | `arm64-v8a` | Primary distribution package for standard 64-bit Android smartphones |
 | `app-x64-release.apk` | `x86_64` | Package for Android emulators and x86 Chromebook devices |
-| `runtime-arm64.tar.gz` | `arm64-v8a` | Native on-device runtime bundle |
-| `runtime-x64.tar.gz` | `x86_64` | Native runtime bundle for x86_64 devices |
+
+The APK bundles the native Go engine as `lib/<abi>/libdsh.so` plus its provenance manifest. There is no rootfs archive and no runtime bundle to ship separately.
 
 ---
 
@@ -33,10 +33,11 @@ bash tooling/setup-toolchain.sh
 source tooling/env.sh
 ```
 
-### Step 2: Build Runtime
+### Step 2: Build the Go engine
 ```bash
-# Build native runtime for arm64
-bash runtime/build-runtime.sh arm64-v8a
+# Check out the pinned revision from native-engine.lock.json, then build
+# libdsh.so for the target ABI and regenerate assets/runtime/manifest.json
+# (see README.md, "Building from Source").
 ```
 
 ### Step 3: Package APK

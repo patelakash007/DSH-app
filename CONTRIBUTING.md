@@ -22,13 +22,13 @@ To build the project locally, ensure you have the required prerequisites:
 - **Flutter**: Follow the version specified in `app/pubspec.yaml`
 - **Dart**: SDK `^3.13.5`
 - **Android SDK / NDK**: JDK 17, Android SDK Platform API 26+
-- **Native Runtime**: Built using `runtime/build-runtime.sh`
+- **Native Runtime**: The Go engine pinned in `native-engine.lock.json`, built into `libdsh.so` (see README, "Building from Source")
 
 ### Building the Native APK
 
 ```bash
-# Build runtime bundle
-bash runtime/build-runtime.sh arm64-v8a
+# Build the pinned Go engine into app/android/app/src/main/jniLibs/<abi>/libdsh.so
+# and regenerate assets/runtime/manifest.json (see README, "Building from Source").
 
 # Build arm64 release APK
 bash tooling/build-apk.sh -f arm64 --keep-daemon

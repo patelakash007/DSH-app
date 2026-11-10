@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [Unreleased]
+
+### Removed
+- Deleted the legacy PRoot / Ubuntu rootfs / Node.js engine stack: `runtime/` (rootfs builder, npm and pnpm locks, DSH patches, Node bridge and media plugin, PRoot/glibc shims, guard tests), the guest auth bridge, and the Kotlin direct-glibc launcher, rootfs extractor, XZ reader, guest overlays and their tests. The native Go engine is now the only engine in the repository.
+- Removed the XZ dependency, PRoot JNI packaging and `runtime/out` source directories from the Android build.
+
+### Changed
+- Regenerated `app/android/app/src/main/assets/runtime/manifest.json` from the pinned engine lock, so the packaged `libdsh.so` is revision- and hash-verified at launch instead of silently skipping verification.
+
 ## [1.0.0] - 2026-11-09
 
 ### Added

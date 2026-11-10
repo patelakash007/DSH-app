@@ -6,10 +6,10 @@ Authoritative sources: AGENTS.md and CONTRIBUTING.md. Severity ratings reflect r
 Modify source files only; never manually edit build artifacts or generated outputs: `app/build/`, `.dart_tool/`, merged l10n files, or synced guides. Run `python3 app/tool/l10n_merge.py` for `.arb` changes, `python3 app/tool/guide_sync.py` for `docs/guide/` edits, and `node sdk/plugin-kit/scripts/sync-skill.mjs` for plugin skill inputs.
 
 ## 2. Engine Patches & Pins Sync | Blocker
-Files under `runtime/patches/` must stay synchronized with `pins.json`. Do not hand-edit vendored vendor code; ensure patches apply cleanly upon engine version updates.
+The engine revision in `native-engine.lock.json` must stay synchronized with the packaged `libdsh.so` and its manifest hash. Never ship a binary whose hash is not recorded.
 
 ## 3. Single Source of Truth for Bridge Protocol | Blocker
-`/dsh-go/v1/*` route schemas, response payloads, and error codes (`unavailable`, etc.) are defined authoritatively in `runtime/bridge/dsh-go-bridge/`. App layers (`packages/dsh_client`, `app/lib/state`) consume without defining parallel sources of truth. Both sides and integration tests must stay synchronized.
+`/dsh-go/v1/*` route schemas, response payloads, and error codes (`unavailable`, etc.) are defined authoritatively by the pinned Go engine (`DSH-go-rewrite`). App layers (`packages/dsh_client`, `app/lib/state`) consume without defining parallel sources of truth. Both sides and integration tests must stay synchronized.
 
 ## 4. Authoritative Host Answers for Critical Operations | Blocker
 Destructive operations (session deletion, permission grants, credential modifications) must rely on real host responses. Never fake answers locally; return stable error codes and avoid silent error suppression.

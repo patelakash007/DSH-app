@@ -10,7 +10,7 @@
 | **Platform Bridge** | Kotlin (Android platform channels) | Lifecycle management, accessibility service bridge for phone control, foreground services, and native process supervisor. |
 | **DSH API Client** | `packages/dsh_client` (Pure Dart) | Platform-independent HTTP and WebSocket communication layer, shared between native on-device and remote host modes. |
 | **Remote Gateway** | `packages/dsh_remote` (Pure Dart) | Seamless connectivity to remote DSH server instances via SSH and DSH Remote protocols. |
-| **Native Runtime** | Direct native Android binary execution | Powered by DSH-Go native engine—direct execution without PRoot, Ubuntu chroots, or container overhead. |
+| **Native Runtime** | Out-of-process Android Go executable (`libdsh.so`) | DSH-Go native engine, pinned in `native-engine.lock.json` and hash-verified at launch. No PRoot, Ubuntu chroot, Node.js, or container layer ships in the APK. |
 
 ## Repository Architecture
 
@@ -37,12 +37,17 @@ DSH-app/
   packages/
     dsh_client/                Pure Dart client for DSH Web API
     dsh_remote/                Pure Dart client for DSH Remote endpoints
-  runtime/                     Native runtime build assets, tools, and bridge
+  native-engine.lock.json      Pinned Go engine repository, revision, and protocol version
   sdk/plugin-kit/              Plugin authoring kit for native Android tool cards
   examples/plugins/            Sample plugins and UI widgets
   docs/                        Documentation and developer specifications
   tooling/                     Toolchain setup, APK packaging, and diagnostic scripts
 ```
+
+## Platform Targets
+
+- `minSdk = 26` — required by `java.nio.file` and the native engine's process/path APIs.
+- `targetSdk = 28` — deliberate. DSH is distributed as a signed APK from GitHub Releases, not through Google Play, and targets the behavior its privileged phone-control and accessibility integrations were validated against. The trade-off (opt-in to pre-29 background, storage and foreground-service behavior) is accepted for this distribution model.
 
 ## Security & Runtime Boundaries
 

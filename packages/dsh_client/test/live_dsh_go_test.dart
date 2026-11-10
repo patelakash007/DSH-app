@@ -4,7 +4,7 @@
 /// data), taps (a deferred one, a static one the bridge refuses).
 ///
 /// Skipped unless `DSH_GO_LIVE_URL` holds the launch URL (with `?token=`).
-/// Boot the host as examples/plugins/e2e/host-e2e.sh does (throwaway
+/// Boot a throwaway host (as the retired host-e2e harness did)
 /// DSH_HOME, `dsh plugin --profile web add <example>`, `dsh web --patch`
 /// with the bridge), then:
 /// ```sh

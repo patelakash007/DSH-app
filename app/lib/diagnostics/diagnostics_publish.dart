@@ -1,6 +1,6 @@
 // Publishes the diagnostics snapshot where the on-device engine's agent can
-// read it: `$DSH_HOME/dsh-app/diagnostics.md`. The app's daemon writes it (the
-// Dart side does not know the rootfs), after the engine comes up, when its
+// read it: `$HOME/workspace/dsh-app/diagnostics.md`. Native tools are confined
+// to the workspace, so the old `$DSH_HOME/dsh-app` path was unreachable.
 
 import 'dart:async';
 
