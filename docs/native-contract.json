@@ -4,8 +4,8 @@
   "counts": {
     "rpc": {
       "total": 111,
-      "implemented": 47,
-      "in-progress": 60,
+      "implemented": 50,
+      "in-progress": 57,
       "placeholder": 4
     },
     "mux": {
@@ -444,9 +444,9 @@
     },
     {
       "endpoint": "messageFeedback/delete",
-      "status": "in-progress",
+      "status": "implemented",
       "owner": "native-engine",
-      "test": null,
+      "test": "packages/dsh_client/test/native_go_contract_test.dart",
       "clientReferences": [
         "packages/dsh_client/lib/src/messages_api.dart"
       ],
@@ -454,9 +454,9 @@
     },
     {
       "endpoint": "messageFeedback/list",
-      "status": "in-progress",
+      "status": "implemented",
       "owner": "native-engine",
-      "test": null,
+      "test": "packages/dsh_client/test/native_go_contract_test.dart",
       "clientReferences": [
         "packages/dsh_client/lib/src/messages_api.dart"
       ],
@@ -464,9 +464,9 @@
     },
     {
       "endpoint": "messageFeedback/put",
-      "status": "in-progress",
+      "status": "implemented",
       "owner": "native-engine",
-      "test": null,
+      "test": "packages/dsh_client/test/native_go_contract_test.dart",
       "clientReferences": [
         "packages/dsh_client/lib/src/messages_api.dart"
       ],

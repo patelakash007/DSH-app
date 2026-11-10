@@ -291,6 +291,49 @@ void main() {
       expect((commands! as List).whereType<Map>().map((command) => command['name']), contains('permission'));
     });
 
+    test('native message feedback lifecycle', () async {
+      final sessionId = (await client.createSession()).sessionId;
+      final events = <DshEvent>[];
+      final ended = Completer<TurnEndedEvent>();
+      final watch = client.watch(sessionId).listen((event) {
+        events.add(event);
+        if (event is TurnEndedEvent && !ended.isCompleted) ended.complete(event);
+      });
+      addTearDown(watch.cancel);
+      await client.prompt(sessionId, 'rate this native reply');
+      await ended.future.timeout(const Duration(seconds: 10));
+      final reply = events.whereType<AssistantMessageEvent>().single;
+      final messageId = reply.message.id;
+      expect(messageId, isNotEmpty);
+
+      final created = await client.putMessageFeedback(
+        sessionId,
+        messageId,
+        FeedbackRating.positive,
+        ifVersion: null,
+        note: 'Useful native reply',
+        category: FeedbackCategory.taskResult,
+      );
+      expect(created.messageId, messageId);
+      expect(created.rating, FeedbackRating.positive);
+      expect(created.note, 'Useful native reply');
+      expect(created.category, FeedbackCategory.taskResult);
+
+      await expectLater(
+        client.putMessageFeedback(
+          sessionId,
+          messageId,
+          FeedbackRating.negative,
+          ifVersion: 'stale-version',
+        ),
+        throwsA(isA<MessageFeedbackException>().having((e) => e.code, 'code', 'version-conflict')),
+      );
+      final listed = await client.listMessageFeedback(sessionId);
+      expect(listed.single.version, created.version);
+      await client.deleteMessageFeedback(sessionId, messageId, ifVersion: created.version);
+      expect(await client.listMessageFeedback(sessionId), isEmpty);
+    });
+
     test('session fork persists a closed history prefix', () async {
       final sourceId = (await client.createSession()).sessionId;
       final ended = Completer<TurnEndedEvent>();

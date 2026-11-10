@@ -30,7 +30,7 @@ class NativeEngineManifestTest {
         val digest = MessageDigest.getInstance("SHA-256").digest(binary.readBytes()).joinToString("") { "%02x".format(it) }
         return NativeEngineManifest(
             repository = "https://github.com/patelakash007/DSH-go-rewrite",
-            revision = "0abbab61c79766a9870c25336efd341d56065ef7",
+            revision = "9bba215b76c4f8ff07407b208cb6f8c31148033f",
             sha256 = digest,
             bytes = binary.length(),
             protocolVersion = "native-v1",
