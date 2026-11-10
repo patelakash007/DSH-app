@@ -16,7 +16,7 @@ concurrency:
 
 env:
   FLUTTER_VERSION: '3.47.7'
-  PUB_HOSTED_URL: https://pub.flutter-io.cn
+  PUB_HOSTED_URL: https://pub.dev
   EXPECTED_SIGNER_SHA256: 21f9053812645ea244277eafc236f37fc19f1b6ae07b70fee28aaf07de9bc058
 
 jobs:
