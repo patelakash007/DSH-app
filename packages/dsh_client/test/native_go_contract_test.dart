@@ -229,7 +229,7 @@ void main() {
         attachment.write(
           "mkdir -p .dsh/skills/cloud-native && printf '%s\\n' '---' 'name: cloud-native' "
           "'description: Cloud native contract skill' '---' 'Use native tools only.' "
-          "> .dsh/skills/cloud-native/SKILL.md && echo SKILL_READY\n",
+          "> .dsh/skills/cloud-native/SKILL.md && echo SKILL_\"READY\"\n",
         ),
         isTrue,
       );
